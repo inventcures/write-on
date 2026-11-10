@@ -78,6 +78,8 @@ Options: (a) flat, as in both clones; (b) nested (the spec's Phase 2 idea).
 
 **Answer: flat in Phase 0**, as the spec already decided. The open sub-question is what happens when you make a sentence group over word groups. The replica flattens and silently drops the inner variants. That breaks spec principle 2, "nothing is ever lost". **Our answer: flatten, keep each inner group's active text, and move its other variants into Overflow** with a short label of where they came from. See ADR-0004.
 
+*Revised while implementing:* a paragraph group may hold word and sentence groups inside its variants. Variants are stored as document content (Q9), so inner groups simply travel with the paragraph variant they were made in, and nothing has to be flattened or lost. Only word-over-word and sentence-over-word overlaps flatten.
+
 ### Q12. What happens if someone edits the Markdown body in another app?
 
 **Answer: the JSON comment stores a hash of the body it was written with.** On open, if the hash matches, we restore the full document from the JSON. If it doesn't, the outside edit wins: we load the Markdown body as plain text and put the variants of any group we can no longer place into Overflow, again so nothing is lost. A small notice says this happened.

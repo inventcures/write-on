@@ -1,0 +1,7 @@
+node_modules/
+dist/
+test-results/
+playwright-report/
+*.mp4
+ref-video/
+.DS_Store
