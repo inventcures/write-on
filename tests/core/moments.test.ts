@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { caption, compareWords, crop, describeMoment } from '../../src/core/changes';
 import { toggleGhost } from '../../src/core/ghost';
-import { createGroup, flip, targetForSelection, textVariant } from '../../src/core/groups';
+import { addMachineVariants, createGroup, flip, targetForSelection, textVariant } from '../../src/core/groups';
 import { mapToNow, record, replay, startTimeline, type PieceTimeline } from '../../src/core/moments';
 import { stash } from '../../src/core/overflow';
 import type { EditorState, Command, Transaction } from 'prosemirror-state';
@@ -50,6 +50,16 @@ describe('writing history', () => {
     ({ state: s, timeline: h } = command(s, h, flip(id, 1), 2));
     ({ state: s, timeline: h } = command(select(s, 'Then go.'), h, toggleGhost, 3));
     expect(h.moments.map((e) => e.kind)).toEqual(['variant-added', 'flipped', 'ghosted']);
+  });
+
+  it('marks the moments WO took part in, and says so in plain words', () => {
+    let s = select(piece('Pin it like a thumbtack. Then go.'), 'thumbtack');
+    let h = startTimeline(s.doc);
+    ({ state: s, timeline: h } = command(s, h, addMachineVariants(targetForSelection(s)!, ['nail']), 1));
+    ({ state: s, timeline: h } = command(select(s, 'Then go.'), h, toggleGhost, 2));
+    expect(h.moments.map((m) => m.by)).toEqual(['machine', undefined]);
+    const docs = replay(h);
+    expect(describeMoment(h.moments[0].kind, docs[0], docs[1], h.moments[0].by).caption).toMatch(/^WO suggested/);
   });
 
   it('maps a moment’s place forward to the piece as it is now', () => {

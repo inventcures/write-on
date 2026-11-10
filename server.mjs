@@ -5,6 +5,8 @@ import { createServer } from 'node:http';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { aiConfig, rateLimiter, suggest } from './server/suggest.mjs';
+import { apiLimits, handleApi } from './server/api.mjs';
+import { openStore } from './server/store.mjs';
 
 const root = join(fileURLToPath(new URL('.', import.meta.url)), 'dist');
 const port = Number(process.env.PORT) || 4173;
@@ -25,10 +27,21 @@ const types = {
 };
 
 const limit = rateLimiter();
-const json = (res, status, body) =>
-  res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }).end(JSON.stringify(body));
+// Accounts are on only when DATA_DIR points at lasting storage (a Railway
+// volume); without it, accounts would vanish on every deploy (ADR-0008).
+const store = process.env.DATA_DIR ? await openStore(process.env.DATA_DIR) : null;
+const limits = apiLimits();
+const json = (res, status, body, cookie) =>
+  res
+    .writeHead(status, {
+      'content-type': 'application/json; charset=utf-8',
+      'cache-control': 'no-store',
+      'x-content-type-options': 'nosniff',
+      ...(cookie ? { 'set-cookie': cookie } : {}),
+    })
+    .end(JSON.stringify(body));
 
-function readBody(req, max = 20_000) {
+function readBody(req, max) {
   return new Promise((resolve) => {
     let size = 0;
     const chunks = [];
@@ -60,9 +73,25 @@ createServer(async (req, res) => {
     json(res, 200, { enabled: aiConfig(process.env).enabled });
     return;
   }
+  if (url.pathname.startsWith('/api/') && url.pathname !== '/api/suggest' && url.pathname !== '/api/ai') {
+    if (!store) return json(res, url.pathname === '/api/me' ? 200 : 503, url.pathname === '/api/me' ? { accounts: false, user: null } : { error: 'Accounts are not switched on for this site.' });
+    const max = url.pathname.startsWith('/api/timelines/') ? 9_000_000 : 2_500_000;
+    const input = req.method === 'GET' || req.method === 'HEAD' ? null : await readBody(req, max);
+    const ip = String(req.headers['x-real-ip'] ?? req.headers['x-forwarded-for'] ?? req.socket.remoteAddress ?? '').split(',')[0].trim();
+    try {
+      const out = await handleApi(
+        { method: req.method, path: url.pathname, headers: req.headers, body: input, ip, secure: req.headers['x-forwarded-proto'] === 'https', now: Date.now() },
+        { store, limits },
+      );
+      return json(res, out.status, out.body, out.cookie);
+    } catch (err) {
+      console.error('api error', err?.message);
+      return json(res, 500, { error: 'Something went wrong on our side.' });
+    }
+  }
   if (url.pathname === '/api/suggest') {
     if (req.method !== 'POST') return json(res, 405, { error: 'POST only' });
-    const input = await readBody(req);
+    const input = await readBody(req, 20_000);
     const ip = String(req.headers['x-real-ip'] ?? req.headers['x-forwarded-for'] ?? req.socket.remoteAddress ?? '').split(',')[0].trim();
     const out = await suggest(input, req.headers, { env: process.env, fetch, ip, now: Date.now(), limit });
     json(res, out.status, out.body);

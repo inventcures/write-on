@@ -30,6 +30,8 @@ export interface Moment {
   t: number;
   kind: EntryKind;
   steps: Record<string, unknown>[];
+  /** Set when Write On (the machine) took part: a WO moment, drawn in blue. */
+  by?: 'machine';
 }
 
 export interface PieceTimeline {
@@ -74,7 +76,8 @@ export function record(timeline: PieceTimeline, tr: Transaction, now = Date.now(
     const merged: EntryKind = last.kind === kind ? kind : 'edited';
     moments[moments.length - 1] = { ...last, t: now, kind: merged, steps: [...last.steps, ...steps] };
   } else {
-    moments.push({ t: now, kind, steps });
+    const by = eventsOf(tr).some((e) => 'by' in e && e.by === 'machine') ? 'machine' : undefined;
+    moments.push(by ? { t: now, kind, steps, by } : { t: now, kind, steps });
   }
   return { ...timeline, moments };
 }

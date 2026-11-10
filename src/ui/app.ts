@@ -15,7 +15,9 @@ import { exportMarkdown, fromPieceFile, toPieceFile } from '../core/pieceFile';
 import { schema } from '../core/schema';
 import { samplePiece } from '../sample';
 import { AltPanel } from './altPanel';
-import { loadTimeline, logEvents, readEvents, saveTimeline, toJsonLines } from './eventLog';
+import { readEvents, toJsonLines } from './eventLog';
+import { AccountLibrary, api, ApiError, BrowserLibrary, titleOf, whoAmI, type Library, type Me } from './library';
+import { WritingView } from './writing';
 import { record, replay, startTimeline, type PieceTimeline } from '../core/moments';
 import { Timeline } from './timeline';
 import { explode } from './explode';
@@ -58,6 +60,12 @@ export function startApp(root: HTMLElement): void {
   let pieceTimeline: PieceTimeline;
   let historyTimer: ReturnType<typeof setTimeout> | undefined;
   let timeline: Timeline | null = null;
+  let writing: WritingView | null = null;
+  const browserLibrary = new BrowserLibrary();
+  let library: Library = browserLibrary;
+  let me: Me = { accounts: false, user: null };
+  let libraryTimer: ReturnType<typeof setTimeout> | undefined;
+  let saveWarned = false;
 
   // Layout.
   const page = document.createElement('main');
@@ -94,6 +102,7 @@ export function startApp(root: HTMLElement): void {
   };
 
   const count = button('', 'Read mode: tools in or out', () => toggleRead(), 'count', 'read');
+  const writingBtn = button('Your writing', 'Your writing: every piece and every moment, on one line', () => void openWriting(), 'tool writing-btn', 'writing');
   const marksToggle = button('⋯', 'Show or hide alternative marks', () => {
     body.classList.toggle('marks-off');
     marksToggle.setAttribute('aria-pressed', String(!body.classList.contains('marks-off')));
@@ -114,7 +123,10 @@ export function startApp(root: HTMLElement): void {
   const right = document.createElement('div');
   right.className = 'group';
   right.append(soundBtn, keysBtn, helpBtn);
-  top.append(count, center, right);
+  const leftTop = document.createElement('div');
+  leftTop.className = 'group';
+  leftTop.append(count, writingBtn);
+  top.append(leftTop, center, right);
 
   const bottom = document.createElement('footer');
   bottom.className = 'chrome bottom';
@@ -162,6 +174,9 @@ export function startApp(root: HTMLElement): void {
     pieceName = restored.name;
   } else initial = samplePiece();
 
+  let startDoc: Node;
+  /** Settles once we know whether the writer is signed in and their piece is attached. */
+  let ready: Promise<void> = Promise.resolve();
   const panel = new AltPanel(() => view, onFlipped);
   root.append(panel.el);
 
@@ -191,7 +206,7 @@ export function startApp(root: HTMLElement): void {
       if (tr.docChanged) {
         pieceTimeline = record(pieceTimeline, tr);
         clearTimeout(historyTimer);
-        historyTimer = setTimeout(() => void saveTimeline(pieceTimeline), 500);
+        historyTimer = setTimeout(() => void library.saveTimeline(pieceTimeline), library.kind === 'account' ? 4000 : 500);
       }
       const events = eventsOf(tr);
       // A drag out of Overflow onto the page is a Use, like Ctrl+Enter.
@@ -199,7 +214,7 @@ export function startApp(root: HTMLElement): void {
       if (tr.getMeta('uiEvent') === 'drop' && !sel.empty && isInOverflow(before.doc, sel.from) && !isInOverflow(view.state.doc, view.state.selection.from))
         events.push({ kind: 'used', text: before.doc.textBetween(sel.from, sel.to, ' ') });
       if (events.length) onboarding.signal(events.map((ev) => ev.kind));
-      if (events.length) void logEvents(view.state.doc.attrs.id as string, events);
+      if (events.length) void library.logEvents(view.state.doc.attrs.id as string, events);
       if (tr.docChanged || before.doc !== view.state.doc) updateCount();
       requestAnimationFrame(redraw);
     },
@@ -208,7 +223,7 @@ export function startApp(root: HTMLElement): void {
   /** Continue the stored pieceTimeline if it still replays to this piece; otherwise start a new one. */
   async function attachTimeline(doc: Node): Promise<void> {
     pieceTimeline = startTimeline(doc);
-    const stored = await loadTimeline(String(doc.attrs.id));
+    const stored = await library.loadTimeline(String(doc.attrs.id));
     // Edits made while the stored timeline was loading start from `doc`, so they
     // can follow it; only a different piece (another file opened) means stop.
     if (!stored || view.state.doc.attrs.id !== doc.attrs.id) return;
@@ -220,7 +235,7 @@ export function startApp(root: HTMLElement): void {
     }
   }
 
-  function openTimeline(): void {
+  function openTimeline(at?: number, play = false): void {
     if (timeline) return;
     onboarding.signal(['timeline-opened' satisfies TourSignal]);
     panel.close();
@@ -237,7 +252,7 @@ export function startApp(root: HTMLElement): void {
         if (!isInOverflow(view.state.doc, sel.from)) openAlternatives();
       },
     });
-    timeline.open();
+    timeline.open(at, play);
   }
 
   function closeTimeline(): void {
@@ -262,17 +277,183 @@ export function startApp(root: HTMLElement): void {
   function scheduleAutosave(): void {
     clearTimeout(autosaveTimer);
     autosaveTimer = setTimeout(() => files.autosave(toPieceFile(view.state.doc), pieceName), 300);
+    clearTimeout(libraryTimer);
+    libraryTimer = setTimeout(() => void saveToLibrary(), library.kind === 'account' ? 1500 : 400);
   }
 
-  function replaceDoc(doc: Node, name: string): void {
+  /** Save the open piece where the writer's pieces live (browser or account). */
+  async function saveToLibrary(): Promise<void> {
+    clearTimeout(libraryTimer);
+    const doc = view.state.doc;
+    const file = toPieceFile(doc);
+    try {
+      await library.save(String(doc.attrs.id), titleOf(file), file, countPiece(doc).words);
+      saveWarned = false;
+    } catch (err) {
+      if (!saveWarned) notify(`${(err as Error).message} Your writing is still kept in this browser.`, 6000);
+      saveWarned = true;
+    }
+  }
+
+  async function flushSaves(): Promise<void> {
+    clearTimeout(historyTimer);
+    await Promise.all([saveToLibrary(), library.saveTimeline(pieceTimeline)]);
+  }
+
+  function replaceDoc(doc: Node, name: string): Promise<void> {
+    // Save the piece being left first: its last edits may still be waiting on a timer.
+    // (saveToLibrary and saveTimeline read the current piece before their first await.)
+    void flushSaves();
     panel.close();
     pieceName = name;
     view.updateState(createEditorState(withId(doc), view.state.plugins.slice(3)));
-    void attachTimeline(view.state.doc);
+    const attached = attachTimeline(view.state.doc);
     files.autosave(toPieceFile(view.state.doc), pieceName);
+    void saveToLibrary();
     updateCount();
     requestAnimationFrame(redraw);
     view.focus();
+    return attached;
+  }
+
+  // Your writing, pieces and accounts (ADR-0008).
+  const fileName = (title: string) => `${title.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '').toLowerCase().slice(0, 60) || 'piece'}.md`;
+
+  async function openPiece(id: string): Promise<boolean> {
+    if (id === view.state.doc.attrs.id) return true;
+    await flushSaves();
+    let text: string | null = null;
+    try {
+      text = await library.load(id);
+    } catch (err) {
+      notify((err as Error).message, 4000);
+      return false;
+    }
+    if (text === null) {
+      notify('That piece could not be found.', 3000);
+      return false;
+    }
+    files.forgetHandle();
+    const loaded = fromPieceFile(text);
+    await replaceDoc(loaded.doc, fileName(titleOf(text)));
+    if (loaded.notice) notify(loaded.notice, 9000);
+    return true;
+  }
+
+  async function openWriting(): Promise<void> {
+    if (writing) return;
+    await ready;
+    if (writing) return;
+    panel.close();
+    closeMenu();
+    await flushSaves();
+    writing = new WritingView({
+      library: () => library,
+      me: () => me,
+      currentId: () => String(view.state.doc.attrs.id),
+      open: async (id) => {
+        if (await openPiece(id)) closeWriting();
+      },
+      replay: async (id, at) => {
+        if (!(await openPiece(id))) return;
+        closeWriting();
+        openTimeline(at, at === undefined);
+      },
+      signIn,
+      signOut,
+      bringBrowserPieces,
+      browserPiecesNotInAccount: async () => {
+        if (library.kind !== 'account') return 0;
+        const [mine, here] = await Promise.all([library.list().catch(() => []), browserLibrary.list()]);
+        const known = new Set(mine.map((p) => p.id));
+        return here.filter((p) => !known.has(p.id)).length;
+      },
+      close: closeWriting,
+    });
+    writing.open();
+  }
+
+  function closeWriting(): void {
+    writing?.destroy();
+    writing = null;
+    view.focus();
+  }
+
+  /** Copy a piece and its timeline from this browser into the account. */
+  async function adopt(id: string): Promise<boolean> {
+    const text = await browserLibrary.load(id);
+    if (text === null) return false;
+    const summary = (await browserLibrary.list()).find((p) => p.id === id);
+    await library.save(id, summary?.title ?? titleOf(text), text, summary?.words ?? 0);
+    const tl = await browserLibrary.loadTimeline(id);
+    if (tl && !(await library.loadTimeline(id))) await library.saveTimeline(tl);
+    return true;
+  }
+
+  async function bringBrowserPieces(): Promise<number> {
+    if (library.kind !== 'account') return 0;
+    const known = new Set((await library.list()).map((p) => p.id));
+    let n = 0;
+    for (const p of await browserLibrary.list()) {
+      if (known.has(p.id)) continue;
+      try {
+        if (await adopt(p.id)) n++;
+      } catch {
+        break;
+      }
+    }
+    return n;
+  }
+
+  async function useAccount(email: string, untouchedSample = false): Promise<void> {
+    await flushSaves();
+    const id = String(view.state.doc.attrs.id);
+    library = new AccountLibrary(email);
+    // A fresh browser shows the sample; a writer with pieces wants their latest instead.
+    if (untouchedSample && view.state.doc.eq(startDoc)) {
+      const [latest] = await library.list().catch(() => []);
+      const text = latest ? await library.load(latest.id).catch(() => null) : null;
+      if (text) {
+        clearTimeout(libraryTimer);
+        const loaded = fromPieceFile(text);
+        pieceName = fileName(titleOf(text));
+        view.updateState(createEditorState(withId(loaded.doc), view.state.plugins.slice(3)));
+        files.autosave(text, pieceName);
+        updateCount();
+        requestAnimationFrame(redraw);
+        await attachTimeline(view.state.doc);
+        return;
+      }
+    }
+    // The piece open on screen comes with the writer into their account.
+    const there = await library.load(id).catch(() => null);
+    if (there === null) await adopt(id).catch(() => saveToLibrary());
+    await attachTimeline(view.state.doc);
+  }
+
+  async function signIn(email: string, password: string, create: boolean): Promise<string | null> {
+    try {
+      const res = await api<{ user: { email: string } }>('POST', create ? '/api/signup' : '/api/login', { email, password });
+      me = { accounts: true, user: res.user };
+      await useAccount(res.user.email);
+      notify(create ? 'Account made. Your writing now saves to it.' : `Signed in as ${res.user.email}.`, 3000);
+      return null;
+    } catch (err) {
+      return err instanceof ApiError ? err.message : 'Couldn’t sign in.';
+    }
+  }
+
+  async function signOut(): Promise<void> {
+    await flushSaves();
+    await api('POST', '/api/logout').catch(() => undefined);
+    me = { ...me, user: null };
+    library = browserLibrary;
+    // Don't leave the account's writing on a shared screen: go back to this browser's own.
+    files.clearAutosave();
+    const [latest] = await browserLibrary.list();
+    const text = latest ? await browserLibrary.load(latest.id) : null;
+    await replaceDoc(text ? fromPieceFile(text).doc : samplePiece(), text ? fileName(titleOf(text)) : 'piece.md');
+    notify('Signed out. Your account’s writing is no longer on this screen.', 3500);
   }
 
   // Commands with app-level effects.
@@ -455,6 +636,7 @@ export function startApp(root: HTMLElement): void {
       case 'suggest': suggestNow(); return true;
       case 'overflow': toggleOverflow(); return true;
       case 'timeline': openTimeline(); return true;
+      case 'writing': void openWriting(); return true;
       case 'source': showSource(); return true;
       case 'save': void saveFile(); return true;
       case 'open': void openFile(); return true;
@@ -487,7 +669,7 @@ export function startApp(root: HTMLElement): void {
   window.addEventListener(
     'keydown',
     (e) => {
-      if (timeline) return;
+      if (timeline || writing) return;
       if (isSheetOpen()) {
         if (document.querySelector('.key-btn.capturing')) return;
         if (e.key === 'Escape' || keys.match(e) === 'source') {
@@ -510,7 +692,7 @@ export function startApp(root: HTMLElement): void {
     true,
   );
   window.addEventListener('keydown', (e) => {
-    if (timeline || isSheetOpen() || e.defaultPrevented || view.dom.contains(e.target as globalThis.Node)) return;
+    if (timeline || writing || isSheetOpen() || e.defaultPrevented || view.dom.contains(e.target as globalThis.Node)) return;
     if (runShortcut(e, false)) e.preventDefault();
   });
 
@@ -518,7 +700,12 @@ export function startApp(root: HTMLElement): void {
   
   void document.fonts?.ready.then(() => requestAnimationFrame(redraw));
 
-  void attachTimeline(view.state.doc);
+  startDoc = view.state.doc;
+  ready = attachTimeline(view.state.doc).then(async () => {
+    me = await whoAmI();
+    if (me.user) await useAccount(me.user.email, !restored);
+    else await saveToLibrary();
+  });
   updateCount();
   setOverflowEditable();
   requestAnimationFrame(redraw);

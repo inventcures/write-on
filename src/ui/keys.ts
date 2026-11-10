@@ -14,6 +14,7 @@ export type ActionId =
   | 'overflow'
   | 'use'
   | 'timeline'
+  | 'writing'
   | 'source'
   | 'save'
   | 'open';
@@ -29,6 +30,7 @@ export const ACTIONS: { id: ActionId; label: string; combo: string }[] = [
   { id: 'overflow', label: 'Overflow panel', combo: 'Ctrl+Shift+KeyD' },
   { id: 'use', label: 'Use in the page (in Overflow)', combo: 'Ctrl+Enter' },
   { id: 'timeline', label: 'Timeline: replay and revisit every moment', combo: 'Ctrl+Shift+KeyL' },
+  { id: 'writing', label: 'Your writing: every piece and moment, on one line', combo: 'Ctrl+Shift+KeyH' },
   { id: 'source', label: 'Source view (the raw file)', combo: 'Ctrl+KeyU' },
   { id: 'save', label: 'Save', combo: 'Ctrl+KeyS' },
   { id: 'open', label: 'Open', combo: 'Ctrl+KeyO' },

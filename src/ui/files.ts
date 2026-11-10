@@ -25,6 +25,16 @@ export function autosave(text: string, name: string): void {
   }
 }
 
+/** Forget the browser's copy of the open piece (on sign-out, so it doesn't stay on a shared screen). */
+export function clearAutosave(): void {
+  try {
+    localStorage.removeItem(AUTOSAVE_KEY);
+    localStorage.removeItem(NAME_KEY);
+  } catch {
+    /* nothing stored */
+  }
+}
+
 export function restore(): { text: string; name: string } | null {
   try {
     const text = localStorage.getItem(AUTOSAVE_KEY);

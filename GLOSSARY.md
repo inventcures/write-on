@@ -70,6 +70,14 @@ _Avoid_: History, telemetry, analytics
 The replayable record of a piece: the document it started from and every moment since, kept beside the piece, never in its file.
 _Avoid_: History (that's undo), version history, changelog
 
+**Your writing**:
+Every moment of every piece on one horizontal line, plus the list of pieces, with sign-in. The all-pieces counterpart of a piece's Timeline.
+_Avoid_: History, dashboard, archive
+
+**WO**:
+Write On, the pairing partner, when it is shown taking part (its moments on a timeline, its machine variants). Always electric blue.
+_Avoid_: AI, the bot, assistant
+
 **Moment**:
 One step on the timeline: a burst of writing or one choice (a flip, a ghost, a stash), shown with what changed.
 _Avoid_: Entry, revision, commit, diff

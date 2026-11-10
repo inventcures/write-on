@@ -260,3 +260,25 @@ tp53 on the live app: "this is too minimal... new users including me are at a lo
 
 ### Q36. Where does the explainer video go?
 - **Answer:** the welcome card shows `/explainer.mp4` when that file exists (put it in `public/explainer.mp4`) and shows nothing when it doesn't, so the slot is ready before the video. The video is our own explainer, not Fried's footage, so it may live in the public repo.
+
+## Round 9: accounts and all your writing on one line (2026-11-10)
+
+tp53: "add user controls - auth, login, history, event log (of ALL your writing) laid out as a linear horizontal timeline... as minimalist yet visually aesthetic... including event log of 1 piece of writing or 'replay'... paired on with WO aka 'Write On'".
+
+### Q37. How do writers sign in, and where does their writing live?
+- **Answer:** email and password, sessions in an HttpOnly cookie, and one SQLite file on a Railway volume. Accounts are off until the volume is there. Full reasons and rejected options are in ADR-0008.
+
+### Q38. What is "history"?
+- **Answer:** "Your writing" (Ctrl+Shift+H, or the button next to the word count). It has two parts:
+  - One horizontal line of every moment of every piece, oldest on the left. Each piece's run is titled above it, and the title sticks while you scroll.
+  - The list of pieces: open, replay, or delete (delete asks twice, and the open piece can't be deleted).
+- **Why one line, not one row per piece:** tp53 asked for a linear timeline, and a writer's life is one sequence. Interleaved pieces show up as runs, and the piece is named above each run.
+- **Folding time:** within a sitting, space follows time. A pause of more than half an hour folds into a fixed gap, with the day written under it when the day changes. Without folding, a year of writing would be a few specks in a mile of empty line. Zoom with − / + or Ctrl+scroll. Hover a moment to see when, what and which piece; click it to open that piece's timeline at that moment.
+
+### Q39. "Paired on with WO": what does that mean on screen?
+- **Reading:** the replay should show the writer and Write On (WO) working together, with WO's part visible.
+- **Answer:** every moment WO took part in (machine variants so far) is drawn in WO's electric blue, taller, with a dot above. That holds on the all-writing line and in each piece's own timeline, and the caption says "WO suggested other ways to say this. Yours stayed on the page." The legend names WO as "your pairing partner". The writer's own moves keep the traffic-light colours.
+
+### Q40. Found while building
+- **Bug fixed (silent data loss):** switching pieces less than half a second after typing lost the last edits, because the pending save was cancelled. Now the piece being left is always saved first. A browser test covers it.
+- **Bug fixed:** signing in on a fresh browser made another copy of the sample instead of opening the writer's latest piece.
