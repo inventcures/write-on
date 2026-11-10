@@ -1,0 +1,30 @@
+# Narration settings. API keys are never stored here; they come from the environment
+# (GEMINI_API_KEY / CARTESIA_API_KEY), loaded from the file named by $WO_ENV_FILE when set.
+# Same voice and model as the author's earlier explainer videos.
+provider: gemini
+gemini:
+  model: gemini-3.8-flash-tts
+  voice: Sulafat
+cartesia:
+  model: sonic-3.6
+  voice_id: null
+  version: "2025-04-16"
+style: >-
+  Calm, warm, unhurried and expressive, like a thoughtful friend showing you a tool they love,
+  with a soft Indian English accent. Measured, steady pace, about 145 words per minute. Gentle
+  curiosity on questions, a little delight on the small reveals. Never salesy or dramatic.
+style_by_kind:
+  question: " Pose this as a genuine, inviting question to the viewer, and let it hang."
+  formula: " Slightly slower and deliberate."
+  key: " Say the keyboard shortcut clearly and a little slower, like instructions."
+voices: {}
+audio:
+  rate: 48000
+  tempo: 1.16
+  tempo_by_scene: {}
+  lufs: -16.0
+  true_peak: -1.5
+  gap_after: {narration: 0.45, formula: 0.8, question: 1.4, key: 0.7}
+  scene_lead: 0.6
+  scene_tail: 1.0
+  final_tail: 6.0

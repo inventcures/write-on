@@ -1,0 +1,10 @@
+# Spoken-only respellings (regex -> replacement). Captions keep the original.
+- ["\\bWrite_On\\b", "Write On"]
+- ["\\bwrite-on\\b", "Write On"]
+- ["\\bWrite-on\\b", "Write On"]
+- ["\\bCtrl\\+Shift\\+R\\b", "Control Shift R"]
+- ["\\bCtrl\\+Shift\\+A\\b", "Control Shift A"]
+- ["\\bCtrl\\+Shift\\+X\\b", "Control Shift X"]
+- ["\\bCtrl\\+Shift\\+L\\b", "Control Shift L"]
+- ["Ctrl\\+/", "Control slash"]
+- ["\\bAI\\b", "A I"]

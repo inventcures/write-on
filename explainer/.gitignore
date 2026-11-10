@@ -1,0 +1,7 @@
+audio/
+media/
+output/
+scenes/videos/
+scenes/latex_cache/
+__pycache__/
+.env
