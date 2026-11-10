@@ -40,6 +40,13 @@
     "title": "Title",
     "beats": [
       {
+        "id": "1.0",
+        "kind": "narration",
+        "voice": "narrator",
+        "display_text": "Write-on began on November the tenth, the day Anthropic released Fable 5.2. Timelines filled with people pushing it to its limits. One question stuck instead: how do you write more, and more thoughtfully, without handing your thinking to the machine?",
+        "spoken_text": "Write On began on November the tenth, the day Anthropic released Fable 5.2. Timelines filled with people pushing it to its limits. One question stuck instead: how do you write more, and more thoughtfully, without handing your thinking to the machine?"
+      },
+      {
         "id": "1.1",
         "kind": "narration",
         "voice": "narrator",
@@ -225,8 +232,8 @@
         "id": "5.5",
         "kind": "key",
         "voice": "narrator",
-        "display_text": "Your first minute: Write-on opens in read mode, just your words and a word count. Press Ctrl+Shift+R to bring the tools in. The question mark brings this video back.",
-        "spoken_text": "Your first minute: Write On opens in read mode, just your words and a word count. Press Control Shift R to bring the tools in. The question mark brings this video back."
+        "display_text": "Your first minute: a welcome card and a short tour walk you through each move once. Ctrl+Shift+R hides the tools when you want just your words. The question-mark button brings the card, and this video, back.",
+        "spoken_text": "Your first minute: a welcome card and a short tour walk you through each move once. Control Shift R hides the tools when you want just your words. The question-mark button brings the card, and this video, back."
       },
       {
         "id": "5.6",
@@ -260,8 +267,8 @@
         "id": "6.3",
         "kind": "narration",
         "voice": "narrator",
-        "display_text": "To be clear about what exists: today, Write-on is the workbench, these tools with no AI at all, and your writing stays in your browser and your own files. Next, we plan to learn from your choices and past writing, with quiet nudges that ask questions, and editor personas who critique.",
-        "spoken_text": "To be clear about what exists: today, Write On is the workbench, these tools with no A I at all, and your writing stays in your browser and your own files. Next, we plan to learn from your choices and past writing, with quiet nudges that ask questions, and editor personas who critique."
+        "display_text": "To be clear about what exists: today, Write-on is the workbench, plus one optional machine helper. Press Ctrl+Shift+G and three suggestions arrive in blue, as alternatives you can flip to. They never replace your words. Next, we plan to learn from your choices and past writing, with quiet nudges that ask questions, and editor personas who critique.",
+        "spoken_text": "To be clear about what exists: today, Write On is the workbench, plus one optional machine helper. Press Control Shift G and three suggestions arrive in blue, as alternatives you can flip to. They never replace your words. Next, we plan to learn from your choices and past writing, with quiet nudges that ask questions, and editor personas who critique."
       },
       {
         "id": "6.4",

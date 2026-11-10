@@ -22,3 +22,11 @@ Made 2026-11-10 in the thread "Make 3b1b-style orientation video". The person ga
 
 - Narration was checked by timing and loudness, not by a human ear; mispronunciations, if any, are fixed by adding a respelling to `script/lexicon.yaml` and re-running only the changed beats.
 - The "?" button and welcome card come from the app thread's PR #19; if that UI changes, scene 5 (beat 5.5) should change with it.
+
+## Re-cut, 2026-11-10 19:15 UTC (v2, 4:54)
+
+| # | Decision | Alternatives considered | Why |
+| --- | --- | --- | --- |
+| 14 | **Rewrote beats 5.5 and 6.3** for the app as merged in PRs #19 to #21 | Leaving v1 and adding a caption | v1 said the app "opens in read mode" and has "no AI at all". Now a welcome card and tour greet first visits, and Ctrl+Shift+G gives three blue suggestions that never replace the writer's words (ADR-0007). A wrong orientation is worse than none. The "your writing stays in your browser" line was dropped, because suggestions send the selected passage to Gemini and accounts store pieces on the server. |
+| 15 | **Added an origin beat (1.0)** from the author's dictated story: 10 November, Fable 5.2, how to write more thoughtfully without handing your thinking to the machine | Using the author's own voice | Only a transcript exists; the author was given recording steps, and a clip can be mixed in later. The beat is distilled to 41 words in the narrator's voice. |
+| 16 | **Tempo 1.16 → 1.20** to fit the origin beat under the 5:00 cap (4:54) | Cutting a habit or an idea | Every idea still earns its place; 3% faster speech is barely audible. Only 3 beats were re-synthesized; the rest came from the cache. |

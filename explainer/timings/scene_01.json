@@ -1,22 +1,30 @@
 {
   "scene": 1,
   "title": "Title",
-  "duration": 15.444,
+  "duration": 30.051,
   "beats": [
+    {
+      "id": "1.0",
+      "kind": "narration",
+      "start": 0.5,
+      "speech": 14.737,
+      "end": 15.611,
+      "display_text": "Write-on began on November the tenth, the day Anthropic released Fable 5.2. Timelines filled with people pushing it to its limits. One question stuck instead: how do you write more, and more thoughtfully, without handing your thinking to the machine?"
+    },
     {
       "id": "1.1",
       "kind": "narration",
-      "start": 0.517,
-      "speech": 6.842,
-      "end": 7.746,
+      "start": 15.611,
+      "speech": 6.618,
+      "end": 22.604,
       "display_text": "This is a short orientation, not a manual. Write-on is meant to bend to the way you think, not the other way round."
     },
     {
       "id": "1.2",
       "kind": "narration",
-      "start": 7.746,
-      "speech": 6.45,
-      "end": 14.583,
+      "start": 22.604,
+      "speech": 6.239,
+      "end": 29.218,
       "display_text": "But four ideas make it click much faster, especially if your hands already know another editor by heart."
     }
   ]

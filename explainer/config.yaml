@@ -20,7 +20,7 @@ style_by_kind:
 voices: {}
 audio:
   rate: 48000
-  tempo: 1.16
+  tempo: 1.2
   tempo_by_scene: {}
   lufs: -16.0
   true_peak: -1.5
