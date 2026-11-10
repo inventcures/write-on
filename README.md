@@ -4,13 +4,15 @@ An editor for thinking on the page. Any word, sentence or paragraph can hold qui
 
 It reproduces the workbench of Jason Fried's [Write_On](https://x.com/jasonfried/status/2105403067793584590) (alternative control, not version control) as Phase 0 of a writing thought partner that will learn your style and nudge, but never write for you.
 
+**Try it: https://write-on.up.railway.app** (everything stays in your browser; nothing is sent anywhere).
+
 ## Use it
 
 | Do this | Keys |
 | --- | --- |
 | Tools in or out (it opens in read mode) | Ctrl+Shift+R, or click the word count |
 | Alternatives for the word at the caret, or the selected sentence or paragraph | Ctrl+Shift+A |
-| Flip versions | hover and ← →, or Ctrl+[ / Ctrl+] |
+| Flip alternatives | hover and ← →, or Ctrl+[ / Ctrl+] |
 | Ghost it / revive it | Ctrl+/ |
 | Stash in Overflow / open Overflow / use from Overflow | Ctrl+Shift+X / Ctrl+Shift+D / Ctrl+Return |
 | Timeline | Ctrl+Shift+L |
@@ -30,7 +32,7 @@ npm run test:e2e     # the real app in Chromium (Playwright)
 npm run build && npm start   # production build served on $PORT
 ```
 
-Deployed on Railway from this repo (`railway.json`). Design decisions and their reasons: `docs/decisions/`, `docs/adr/`, `GLOSSARY.md`. Phase 0 spec: issue #2.
+Deployed on Railway (project `write-on`, https://write-on.up.railway.app) from this repo (`railway.json`). Design decisions and their reasons: `docs/decisions/`, `docs/adr/`, `GLOSSARY.md`. Phase 0 spec: issue #2.
 
 ## Credits
 

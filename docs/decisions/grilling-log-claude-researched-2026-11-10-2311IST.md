@@ -222,3 +222,9 @@ The code-review step ran two reviewers side by side: one against the repo's stan
 **Kept on purpose (revisions of earlier answers)**
 - Q21 revision: Use puts the item in as a new paragraph after the paragraph holding the page caret, not at the caret. Dropping a paragraph into the middle of a sentence was never what a writer wanted in testing, and a paragraph keeps any paragraph group it carries. Drag-and-drop is there for exact placement.
 - Small scope beyond the tickets, each cheap and each in service of the spec: Markdown input rules (`# ` for headings, `**bold**`, `*italic*`), a New button, a replay speed control on the timeline, `/healthz` and two safety headers (nosniff, no-referrer) in the server for Railway; the server also survives a malformed URL instead of crashing.
+
+## Round 6: deploy (2026-11-10)
+
+- **Where it lives:** https://write-on.up.railway.app, Railway project `write-on` in tp53's personal workspace, service `write-on`. tp53 chose the subdomain.
+- **How it got there:** a fresh shallow clone of the branch on tp53's laptop, `railway whoami` checked against their account first, tests and build run before upload. Their own checkout (with an uncommitted `.gitignore` and local video files) was never touched or uploaded. Claude Code's safety check on the laptop refused the production upload, so tp53 ran `railway add` / `railway up` / `railway domain` themselves. No environment variables are needed: Railway sets `PORT`, and Phase 0 has no secrets.
+- **Next:** connect the GitHub repo (branch `main`) in the Railway project's settings so every merge deploys itself.
