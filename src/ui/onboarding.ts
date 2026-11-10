@@ -111,14 +111,14 @@ export class Onboarding {
     // tp53: a pairing partner for writing, as in pair programming. Kept to two lines.
     const pair = el('p', 'welcome-pair');
     const link = document.createElement('a');
-    link.href = 'https://en.wikipedia.org/wiki/Pair_programming';
+    link.href = 'https://martinfowler.com/articles/on-pair-programming.html';
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
     link.textContent = 'pair programming';
     pair.append(
-      'Think of it as a pairing partner for your writing, like ',
+      'A pairing partner for your writing, as in ',
       link,
-      ': someone beside you who keeps you on track, helps when you ask, and otherwise gets out of your way. Writing is thinking; Write_On never writes for you.',
+      ': you drive, Write_On navigates. It keeps you on track without getting in the way, helps when you ask, then steps back. A pairing writer, not a ghostwriter.',
     );
     const video = el('div', 'welcome-video');
     video.hidden = true;

@@ -4,7 +4,7 @@ An editor for thinking on the page. Any word, sentence or paragraph can hold qui
 
 It reproduces the workbench of Jason Fried's [Write_On](https://x.com/jasonfried/status/2105403067793584590) (alternative control, not version control) as Phase 0 of a writing thought partner that will learn your style and nudge, but never write for you.
 
-Think of it as a pairing partner for your writing, in the spirit of [pair programming](https://en.wikipedia.org/wiki/Pair_programming): it sits beside you, keeps you on track, helps when you ask, and otherwise gets out of your way.
+A pairing partner for your writing, as in [pair programming](https://martinfowler.com/articles/on-pair-programming.html): you drive, Write_On navigates. It keeps you on track without getting in the way, helps when you ask, then steps back. A pairing writer, not a ghostwriter.
 
 **Try it: https://write-on.up.railway.app** (your writing stays in your browser; only a passage you ask suggestions for is sent, to the server and on to Gemini).
 
