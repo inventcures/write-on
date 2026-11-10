@@ -1,6 +1,6 @@
 # Write\_On Thought Partner: Master Spec & Research
 
-Nov 10, 2026 · tp53 · exported 2026-11-10-1737UTC · live, editable version: https://claude.ai/artifact/A9AkRirCKozPjctQpqhN7P
+Nov 10, 2026 · tp53 · exported 2026-11-10-1801UTC · live, editable version: https://claude.ai/artifact/A9AkRirCKozPjctQpqhN7P
 
 Write\_On is an editor where every word, sentence and paragraph can hold quiet alternatives, and a thought partner that learns how you think on the page and nudges without ever writing the piece for you. This doc specs both layers, from the Write\_On core we reproduce to the learning layer we add on top.
 
@@ -54,7 +54,7 @@ Ten rules settle most product arguments before they start. When a feature idea c
 
 **Anti-goals, stated bluntly.** No draft generation from a prompt. No "make this sound better" rewrite of a whole paragraph. No grammar-police mode as the default. No engagement tricks such as streaks or scores. No sending your writing to train anyone else's model.
 
-**The gray zone, and how we decide.** Some help sits on the line, such as offering three synonyms for one word. The test is *grain and agency*: help below the sentence level that you pick from (a word, a connective) is allowed; help at or above the sentence level arrives as a question, a pattern from your own past, or an example from someone else, never as drop-in text. A user can loosen this per document (see the intensity dial in the nudge section), but the default is strict.
+**The gray zone, and how we decide.** Some help sits on the line, such as offering three synonyms for one word. The test is *grain and agency*: help below the sentence level that you pick from (a word, a connective) is allowed; help at or above the sentence level arrives as a question, a pattern from your own past, or an example from someone else, never as drop-in text. A user can loosen this per document (see the intensity dial in the nudge section), but the default is strict. One deliberate exception, at your request: editor personas (below) may propose a rewritten sentence or opening, but only as a labelled, inactive alternative marked machine-written, which you must choose to switch to (ADR-0006).
 
 ## Reverse engineering Write\_On from the demo clips
 
@@ -197,7 +197,7 @@ Any span at any grain can hold a set of alternatives. One is *active* (shown in 
 
 Why this beats version control: versions are snapshots of the *whole* document in *time*. Alternatives are options for *one part* in *place*. You never ask "what did the doc look like on Tuesday"; you ask "what were my other ways of saying this line". \[TWEET: "Not version control, but alternative control."\]
 
-**Worked example.** Paragraph P1 has sentence S2 with alternatives S2a (active), S2b, S2c. Inside S2a, the word "fast" has alternatives "quick" and "brisk". Write\_On's replica does not allow this nesting: making the sentence group flattens the word group \[CLONE\]. We propose nesting as a Phase 2 extension \[NEW\]: switching S2a to S2b hides S2a's word options but keeps them for when S2a returns. Phase 0 stays flat, like the original.
+**Worked example.** Paragraph P1 has sentence S2 with alternatives S2a (active), S2b, S2c. Inside S2a, the word "fast" has alternatives "quick" and "brisk". Write\_On's replica does not allow this nesting: making the sentence group flattens the word group \[CLONE\]. Decided for Phase 0 (ADR-0004): word and sentence groups don't nest, and flattening sends the inner variants to Overflow instead of discarding them; a paragraph group may contain word groups.
 
 ### Dim \[TWEET + INFERRED\]
 
@@ -262,7 +262,20 @@ type EditEvent =
   | { kind: 'nudge_shown' | 'nudge_acted' | 'nudge_dismissed'; nudgeId: string; t: number };
 ```
 
-The implementation fit is a CRDT-backed rich-text editor (ProseMirror or Lexical with Yjs), with alternatives as custom node types. The CRDT gives undo, local-first storage and later sync for free.
+Phase 0 is built on ProseMirror directly, not TipTap (ADR-0001), with alternatives as custom node types and no Yjs yet (ADR-0002); a CRDT comes later for sync.
+
+### The event-log timeline: see, replay and re-enter your writing \[NEW, Phase 0\]
+
+The event log gets its own views, so the history of a piece becomes something you can read and work in, not just storage. You asked for this; it is Phase 0 (issues #14, #15).
+
+- **The 10,000-foot view.** A horizontal timeline, left to right, with every event as a mark: additions, deletions, edits, alternatives added or chosen, ghosts, stashes. Marks are colored by kind so bursts of drafting and stretches of cutting stand out at a glance.
+- **Zoom.** Pinch or scroll from the whole session down to single events. At the closest zoom each mark shows what changed, for example "tension → struggle".
+- **Replay.** Play the piece being written from the first keystroke to now, at adjustable speed, with the document reflowing as it goes.
+- **Edit here.** From any event, jump into the live document at that spot (a paragraph, a sentence, an opening) and work on it now: add alternatives, change a word, ask a persona. The past isn't rewritten; you're editing the present version from a point you found in the past.
+
+Example: you replay last night's session and see you rewrote the opening five times, then stashed the third version. You click that stash event, land on the opening, pull the stashed line back as an alternative, and cycle between it and the current one.
+
+This is also the learning layer's best teacher: the same log the timeline draws is what the preference model reads.
 
 ## The learning layer: a model of how you write \[NEW\]
 
@@ -351,6 +364,20 @@ You write: "There are many reasons why remote work can be beneficial for some te
 
 Per document the writer picks Quiet (rungs 0 to 1), Editor (0 to 3, the default), or Workshop (0 to 5). There is no setting that writes paragraphs. A "focus" toggle drops to rung 0 for a set time.
 
+### Editor personas: adversarial review in many voices \[NEW, Phase 1\]
+
+Any atomic piece (a word, a phrase, a sentence, a paragraph opening or close, the piece's cold open) can be put in front of a panel of editor personas, each reviewing it in its own spirit. You asked for this; it is Phase 1 (issue #16).
+
+| Persona | Spirit it tries to capture | Typical question |
+| --- | --- | --- |
+| New Yorker editor | Precision, restraint, the exact word | "Is 'very' doing any work here?" |
+| NYT editor | Clarity, the news up top, plain verbs | "Can a reader get the point from the first sentence?" |
+| Vanity Fair editor | Scene, voice, a hook that pulls | "Where's the moment that opens this?" |
+| Your favorite writer | Their habits, from their published work | "How would they make this turn?" |
+| You | Your own corpus, via the Writer Model | "You usually open with a blunt claim; this opens with a hedge." |
+
+How it stays a thought partner: each persona leads with critique and a question. When you ask for a version ("what would the New Yorker do with this line?"), it arrives as a labelled, *inactive* alternative under the span, marked machine-written, so your text stays active until you choose to switch (ADR-0006). You can add your own personas by describing them or giving sample texts. Personas of real publications and writers are study lenses, not claims to speak for them.
+
 ## Style imitation: what "cloning your voice" is for \[NEW\]
 
 The system learns to imitate your style so it can *judge* in your voice, not so it can *write* in it. Imitation is an internal capability that powers ranking, detection and examples, and it surfaces as prose only in narrow, labeled, opt-in cases.
@@ -394,8 +421,8 @@ Past writing samples enter the Writer Model through the same LLM labeling pass (
 
 | Component | Proposed technology | Why |
 | --- | --- | --- |
-| Editor | ProseMirror or Lexical, custom span nodes, React shell | Mature rich-text cores with custom node support |
-| Document storage | Yjs CRDT, saved to IndexedDB (web) or SQLite (desktop via Tauri) | Local-first, offline, free undo, later multi-device sync |
+| Editor | ProseMirror directly, custom span nodes (ADR-0001) | Mature rich-text cores with custom node support |
+| Document storage | Local storage in Phase 0, no Yjs yet (ADR-0002); Yjs added for sync later | Local-first, offline, free undo, later multi-device sync |
 | Event log | Append-only table in the same local DB | Cheap, replayable, the training data for level 5 |
 | Writer Model | JSON style card + feature stats + vector index of your passages (sqlite-vec or LanceDB) | Inspectable by you, portable, no server needed |
 | Local scorer | Small encoder or classic stylometry features in WASM | Sub-100 ms checks while typing, text stays on device |
@@ -508,9 +535,9 @@ These five choices change what we build, so they're yours to make; each has a re
 
 | Decision | Options | Recommendation |
 | --- | --- | --- |
-| Platform for Phase 0 | Web app, desktop (Tauri), Obsidian or VS Code plugin | Web app with local storage: fastest to iterate, ports to Tauri later |
-| Editor core | ProseMirror, Lexical, TipTap (ProseMirror wrapper) | TipTap: custom nodes with the least boilerplate |
-| How strict the no-prose rule is | Strict everywhere, or one-sentence "how would I say this" in Workshop | Strict in Phases 0 to 2; revisit after the blind voice test |
+| Platform for Phase 0 | Web app, desktop (Tauri), Obsidian or VS Code plugin | Decided: web app, deployed on Railway |
+| Editor core | ProseMirror, Lexical, TipTap (ProseMirror wrapper) | Decided: ProseMirror directly (ADR-0001) |
+| How strict the no-prose rule is | Strict everywhere, or one-sentence "how would I say this" in Workshop | Decided: strict for anything the AI starts on its own; persona rewrites allowed on request as labelled, inactive, machine-marked variants (ADR-0006) |
 | Where the Writer Model runs | Fully local, or cloud LLM for labeling | Local stats + cloud labeling on pause, zero-retention API |
 | Whose writing seeds v1 | Your own corpus only, or also authors you admire as study examples | Your corpus only; admired authors as a separate "study shelf" later |
 
