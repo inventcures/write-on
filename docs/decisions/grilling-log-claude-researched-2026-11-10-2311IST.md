@@ -147,3 +147,25 @@ The master spec stays the source for the long-term design. This log narrows it f
 1. You hold three variants of a sentence, flip to the second, type a word into it, then press Ctrl+Z. What gets undone, and why isn't it the flip?
 2. You make a sentence group over a sentence that contains the word group "paperclip / thumbtack / eraser", with "thumbtack" showing. Where does each of the three words end up?
 3. You open your piece in another Markdown editor, fix a typo in paragraph 2, and reopen it in Write_On. What does Q12 do, and what would you see if paragraph 2 had a paragraph group?
+
+---
+
+## Round 4: new asks from tp53 during implementation (2026-11-10)
+
+tp53 asked for (1) multiple views of the event log, starting with a horizontal timeline of every edit that can be zoomed from "10,000 feet" down to single events, replayed, and used to drop into editing that passage; and (2) persona-based adversarial review of every atomic piece (word, phrase, line, paragraph, opening, close, cold open) in the voices of a New Yorker, NYT or Vanity Fair editor, a favourite writer, or "you, from your own history".
+
+### Q24. Can the existing event log support a replay?
+
+No. It records choices (flips, ghosts, stashes), not typing. A replay needs every change. **Answer: record every document change as ProseMirror steps**, coalesced into one entry per burst of typing (a pause of over a second, or any choice, starts a new entry), with a timestamp and a label (typed, deleted, flipped, ghosted…). Steps replay exactly from the first recorded document. Kept in IndexedDB per piece, never in the piece file, which stays clean Markdown.
+
+### Q25. Which views ship now?
+
+**Answer: the horizontal timeline only**, with zoom, scrubbing, play/pause, a per-event "before → after" view, and "edit here" (jump to that passage in the current piece, mapped forward through later edits, and open the alternatives panel there). Other views (lanes per paragraph, by kind of change) wait until real use shows which one is missing. Phase 0, two new tickets before the deploy.
+
+### Q26. Where do personas go?
+
+**Answer: Phase 1**, the first AI phase, as its own spec issue. They need a model, and Phase 0's gate is about the no-AI workbench (ADR-0005).
+
+### Q27. How do persona rewrites square with "the human writes every sentence that ships"?
+
+The master spec's gray-zone rule says help at sentence level or above arrives as a question, never as drop-in text. tp53 explicitly asked for persona rephrasings of lines, openings and closes. **Answer: persona output comes in two forms.** A critique (questions and notes in that editor's voice, as marginalia), and rewrites that arrive only as extra variants under the writer's own text: labelled with the persona, never active until the writer flips to them, and marked as machine-written in the authorship ledger. The writer still chooses, edits and owns every line; the piece never changes on its own. This deliberately loosens the spec's rule, at the writer's request, and is recorded as ADR-0006. The blind voice test and ownership score from the spec are the tripwires if it starts to homogenise their voice.
