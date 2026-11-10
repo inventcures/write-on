@@ -1,6 +1,6 @@
 # Write\_On Thought Partner: Master Spec & Research
 
-Nov 10, 2026 · tp53 · exported 2026-11-10-1728UTC · live, editable version: https://claude.ai/artifact/A9AkRirCKozPjctQpqhN7P
+Nov 10, 2026 · tp53 · exported 2026-11-10-1731UTC · live, editable version: https://claude.ai/artifact/A9AkRirCKozPjctQpqhN7P
 
 Write\_On is an editor where every word, sentence and paragraph can hold quiet alternatives, and a thought partner that learns how you think on the page and nudges without ever writing the piece for you. This doc specs both layers, from the Write\_On core we reproduce to the learning layer we add on top.
 
@@ -60,7 +60,7 @@ Ten rules settle most product arguments before they start. When a feature idea c
 
 Write\_On, as shown, is a dark, monospace, single-document editor with five ideas on a bare page: alternatives in place, ghosting, an Overflow side panel, an AI Lab that marks and trims but never rewrites, and one Markdown file that holds it all. This teardown comes from the frame-by-frame measurements published by an open-source replica, cross-checked against a second clone; our own frames will confirm or correct it.
 
-**Grounding for this section.** Fried's post has three clips: a 6:55 main walkthrough, a 1:26 follow-up ("Plus more explosions!"), and a 0:52 reply about the file format, all recorded at 3096×1952, 60 fps ([write-on-replica design spec](https://github.com/joeysim/write-on-replica/blob/main/docs/superpowers/specs/2026-10-11-write-on-replica-design.md)). Items below tagged \[CLIPS\] were measured from those clips by the replica's author; items tagged \[CLONE\] are that author's or [undertext](https://github.com/klipstack/undertext)'s design decisions where the clips are silent. Our own \[VIDEO\] check is pending the download on your laptop.
+**Grounding for this section.** Fried's post (2026-09-30, decoded from the post ID) has three clips: a 6:55 main walkthrough, a 1:26 follow-up ("Plus more explosions!"), and a 0:52 reply about the file format, all recorded at 3096×1952, 60 fps ([write-on-replica design spec](https://github.com/joeysim/write-on-replica/blob/main/docs/superpowers/specs/2026-10-11-write-on-replica-design.md)). Items below tagged \[CLIPS\] were measured from those clips by the replica's author; items tagged \[CLONE\] are that author's or [undertext](https://github.com/klipstack/undertext)'s design decisions where the clips are silent. Our own \[VIDEO\] check is pending the download on your laptop. Items tagged \[FRIED\] quote Fried's own notes from the post's thread, which confirm the replica's measurements.
 
 ### What you see on screen \[CLIPS\]
 
@@ -81,9 +81,9 @@ Each grain has its own mark so the three can sit near each other without confusi
 | Active dot | Filled violet | Filled pink | Filled copper |
 
 - **One dot per variant**, active one filled, the rest hollow rings. So you can see at a glance that a word has 3 options and which one is showing.
-- **Lines look hand-drawn**: a slight wobble and tilt, like an editor's pen.
+- **Lines look hand-drawn**: a slight wobble and tilt, like an editor's pen. Fried \[FRIED\]: "something a little human, a little wavy, imperfect, just slightly... not too much," so it feels different from "your standard straight and perfect computer-generated underline."
 - **Cycling in place.** Hover a marked span; it tints. Arrow keys flip to the next or previous version, with a quick blur-and-fade and live reflow of the line. Delete removes the showing version with a small explosion; undo reverses the explosion.
-- **Sound.** Each flip plays a tick. The tick drops in pitch when you land back on the version you started from, so your ear knows when you've come home without looking.
+- **Sound.** Each flip plays a tick. The tick drops in pitch when you land back on the version you started from, so your ear knows when you've come home without looking. In Fried's words \[FRIED\]: "One's higher pitched, which you're gonna hear most of the time, and one is a lower pitched sound. The lower pitch sound is a return to the original. This way, I know when I'm back to the original version I was on before I began playing."
 - **Flips aren't undo steps.** Which version shows is state, not an edit, so undo doesn't walk back through your browsing.
 - **Grammar follows.** In the clip, "like a thumbtack" becomes "like an eraser" when the word flips: the article agrees with the new variant.
 
@@ -121,7 +121,7 @@ This matters for our thesis: **Fried's own AI already obeys "point, don't fix"**
 
 ### The file format \[CLIPS, from the 0:52 reply\]
 
-One Markdown file. Other tools see ordinary Markdown as the piece currently reads. Overflow follows a `<!-- overflow -->` line, and the alternatives, which one is active and what is ghosted live in a `<!-- write_on {…} -->` JSON comment at the end. The replica's reconstruction:
+One Markdown file; Fried \[FRIED\]: "it's all Markdown, too. Alternatives, overflow, etc." Other tools see ordinary Markdown as the piece currently reads. Overflow follows a `<!-- overflow -->` line, and the alternatives, which one is active and what is ghosted live in a `<!-- write_on {…} -->` JSON comment at the end. The replica's reconstruction:
 
 ```markdown
 # Heading
@@ -458,6 +458,17 @@ Voice learning is now common, but every commercial product uses the learned voic
 - **Retrieve exemplars by function, not topic**: pull your past paragraph *openings* when you're writing an opening.
 - **Authorship-embedding drift tracking**: a voice vector of your corpus; flag when a document drifts away from it.
 - **Verbalized sampling + rerank**: when offering word options, sample diverse candidates and rank them by fit to you.
+
+### Research-driven refinements to this spec
+
+The full survey is writing-copilot-sota-claude-researched-2026-11-10-2300IST.md. These six changes come from it and override earlier sections where they differ.
+
+1. **Machine words enter only as options.** AI output is added as one more alternative under a span, never swapped in; your version stays active until you switch. This is how Write\_On's `??` already works \[CLIPS\].
+2. **Layer the style model by how much data you've given it.** L0 cold (no samples): local lint plus constrained Lab operations. L1 card (3 to 5 samples): a PROSE-verified style card and exemplars retrieved by function. L2 vector (about 16+ samples plus logged edits): an authorship-embedding centroid for reranking and drift, and CIPHER-style preferences from edits. L3 adapter (hundreds of paragraphs, opt-in): an on-device LoRA. The roadmap's Phases 1 to 3 map onto L1 to L3.
+3. **A drift meter.** Each document shows how far it has moved from your own baseline on function words, first-person pronouns, word length, punctuation and stance strength. Writers don't notice drift on their own, so the tool must show it.
+4. **Rejected alternatives are the training data.** Keeping every variant you didn't pick (principle 2) is also the cheapest source of personal preference pairs, and no competitor keeps them.
+5. **Paragraph openings as a distribution of moves.** At a paragraph break, rung 3 offers 3 to 5 *moves* you tend to use (anecdote, contrarian claim, question, number), not a predicted sentence. This is a design hypothesis; no benchmark exists yet.
+6. **Writer-set off-limits zones.** You can say "never suggest ideas, only flag clarity" per document, and the nudge engine obeys it.
 
 ### Intellectual lineage
 
