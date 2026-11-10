@@ -221,4 +221,4 @@ The code-review step ran two reviewers side by side: one against the repo's stan
 
 **Kept on purpose (revisions of earlier answers)**
 - Q21 revision: Use puts the item in as a new paragraph after the paragraph holding the page caret, not at the caret. Dropping a paragraph into the middle of a sentence was never what a writer wanted in testing, and a paragraph keeps any paragraph group it carries. Drag-and-drop is there for exact placement.
-- Small scope beyond the tickets, each cheap and each in service of the spec: Markdown input rules (`# `, `> `, `**bold**`), a New button, a replay speed control on the timeline, `/healthz` and basic security headers in the server for Railway.
+- Small scope beyond the tickets, each cheap and each in service of the spec: Markdown input rules (`# ` for headings, `**bold**`, `*italic*`), a New button, a replay speed control on the timeline, `/healthz` and two safety headers (nosniff, no-referrer) in the server for Railway; the server also survives a malformed URL instead of crashing.

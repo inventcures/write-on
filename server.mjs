@@ -25,7 +25,13 @@ createServer(async (req, res) => {
     res.writeHead(200, { 'content-type': 'text/plain' }).end('ok');
     return;
   }
-  const safe = normalize(decodeURIComponent(url.pathname)).replace(/^(\.\.[/\\])+/, '');
+  let path = '/';
+  try {
+    path = decodeURIComponent(url.pathname);
+  } catch {
+    /* malformed escape: serve the app */
+  }
+  const safe = normalize(path).replace(/^(\.\.[/\\])+/, '');
   let file = join(root, safe);
   if (!file.startsWith(root)) file = join(root, 'index.html');
   try {
