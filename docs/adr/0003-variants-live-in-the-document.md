@@ -1,0 +1,3 @@
+# Variants live inside the document, and flips skip history
+
+A word or sentence alternative group is a ProseMirror mark whose attributes hold all its variants and which one is active; a paragraph group is the same data as an attribute on the paragraph node. The active variant is the live text, so the page is always ordinary editable text. A flip replaces that text with another variant in a transaction marked `addToHistory: false`, so undo walks back through writing, not browsing (as in Fried's clips). We chose this over a side store keyed by group id so that save, load, copy, paste and undo all see one structure and a group can never point at text that no longer exists.
