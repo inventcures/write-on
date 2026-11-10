@@ -15,7 +15,7 @@ A pairing partner for your writing, as in [pair programming](https://martinfowle
 | Tools in or out (it opens in read mode) | Ctrl+Shift+R, or click the word count |
 | Alternatives for the word at the caret, or the selected sentence or paragraph | Ctrl+Shift+A |
 | Suggest 3 more, from the machine (in blue; yours stays until you flip) | Ctrl+Shift+G, or ✦ in the panel |
-| Flip alternatives | hover and ← →, or Ctrl+[ / Ctrl+] |
+| Flip alternatives | hover and ← →, or Ctrl+[ / Ctrl+], or ↑ ↓ in the alternatives panel |
 | Ghost it / revive it | Ctrl+/ |
 | Stash in Overflow / open Overflow / use from Overflow | Ctrl+Shift+X / Ctrl+Shift+D / Ctrl+Return |
 | Timeline | Ctrl+Shift+L |

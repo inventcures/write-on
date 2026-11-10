@@ -49,7 +49,7 @@ export class AltPanel {
     this.rows = document.createElement('div');
     this.rows.className = 'rows';
     const foot = document.createElement('footer');
-    foot.textContent = 'return adds · esc closes';
+    foot.textContent = '↑ ↓ flip · return adds · esc closes';
     this.ask = document.createElement('div');
     this.ask.className = 'ask';
     this.ask.hidden = true;
@@ -341,8 +341,31 @@ export class AltPanel {
       e.preventDefault();
       const areas = Array.from(this.rows.querySelectorAll('textarea'));
       areas[areas.length - 1]?.focus();
+    } else if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
+      // ↑ ↓ step through the rows like Tab and Shift+Tab, flipping as they go.
+      // In a row that wraps, they first move the caret, and leave only from the first or last line.
+      const area = e.target as HTMLElement;
+      if (!(area instanceof HTMLTextAreaElement) || !this.rows.contains(area)) return;
+      const down = e.key === 'ArrowDown';
+      if (!leavesRow(area, down)) return;
+      const areas = Array.from(this.rows.querySelectorAll('textarea'));
+      const next = areas[areas.indexOf(area) + (down ? 1 : -1)];
+      if (!next) return;
+      e.preventDefault();
+      next.focus();
+      const at = down ? 0 : next.value.length;
+      next.setSelectionRange(at, at);
     }
   }
+}
+
+/** Whether ↑ or ↓ should leave this row: always in a one-line row, else only from its first or last line. */
+function leavesRow(area: HTMLTextAreaElement, down: boolean): boolean {
+  const line = parseFloat(getComputedStyle(area).lineHeight) || 20;
+  if (area.scrollHeight < line * 1.8) return true;
+  const caret = area.selectionStart;
+  if (area.selectionEnd !== caret) return false;
+  return down ? caret === area.value.length : caret === 0;
 }
 
 function autosize(area: HTMLTextAreaElement): void {

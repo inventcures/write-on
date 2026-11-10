@@ -338,3 +338,6 @@ tp53: "add user controls - auth, login, history, event log (of ALL your writing)
 - **Cause:** Railway's builder mounts a build cache at `node_modules/.vite`, and `npm ci` always deletes `node_modules` first, which it can't do to a mount point. Uploads from the laptop got through because their build had no cache yet. Reproduced here by mounting a directory at that path: `npm ci` fails the same way.
 - **Fix:** the build runs `npm install --include=dev` instead, which installs into the existing `node_modules` without deleting it, so the mount survives. `--include=dev` because building needs TypeScript and Vite, even when the builder sets production mode. The lockfile still pins every version.
 - **Also:** the repo had no CI, so "wait for CI" had nothing to wait for. A GitHub Actions workflow now typechecks and runs the unit and browser tests on every push and PR.
+
+### Q53. tp53: "add up down arrow also to cycle through the suggestions, instead of only tab & shift tab".
+- **Answer:** in the alternatives panel, ↑ and ↓ move between rows and flip as they go, like Tab and Shift+Tab. In a row that wraps onto several lines (a sentence or paragraph), they first move the caret within it, and leave only from its first or last line, so editing a long alternative still works.
