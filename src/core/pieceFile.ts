@@ -77,10 +77,11 @@ export function fromPieceFile(text: string): LoadedPiece {
   if (hashBody(`${body}\u0000${overflow}`) === meta.bodyHash) return { doc: stored };
 
   const edited = docFromMarkdown(body, overflow, String(stored.attrs.id || ''));
-  const { doc, lost } = recoverGroups(stored, edited);
-  const notice =
-    'This piece was edited outside Write_On. Its text was kept as edited' +
-    (lost > 0 ? `, and the variants of ${lost} alternative group${lost === 1 ? '' : 's'} that no longer fit were moved to Overflow.` : '.');
+  const { doc, lost, lostGhosts } = recoverGroups(stored, edited);
+  const parts = ['This piece was edited outside Write_On. Its text was kept as edited.'];
+  if (lost > 0) parts.push(`The variants of ${lost} alternative group${lost === 1 ? '' : 's'} that no longer fit were moved to Overflow.`);
+  if (lostGhosts > 0) parts.push(`${lostGhosts} ghosted passage${lostGhosts === 1 ? ' was' : 's were'} changed and ${lostGhosts === 1 ? 'is' : 'are'} no longer ghosted.`);
+  const notice = parts.join(' ');
   return { doc, notice };
 }
 

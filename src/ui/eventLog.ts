@@ -1,10 +1,10 @@
-import type { PieceHistory } from '../core/history';
+import type { PieceTimeline } from '../core/moments';
 import type { EditEvent } from '../core/piece';
 
 /** The learning layer's source: every choice, per piece, in this browser's IndexedDB. */
 const DB = 'write-on';
 const STORE = 'events';
-const HISTORY = 'history';
+const TIMELINE = 'timeline';
 
 export type LoggedEvent = EditEvent & { pieceId: string; t: number };
 
@@ -12,10 +12,10 @@ let dbPromise: Promise<IDBDatabase> | null = null;
 
 function open(): Promise<IDBDatabase> {
   dbPromise ??= new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB, 2);
+    const req = indexedDB.open(DB, 3);
     req.onupgradeneeded = (e) => {
       if (e.oldVersion < 1) req.result.createObjectStore(STORE, { autoIncrement: true }).createIndex('pieceId', 'pieceId');
-      if (e.oldVersion < 2) req.result.createObjectStore(HISTORY, { keyPath: 'pieceId' });
+      if (!req.result.objectStoreNames.contains(TIMELINE)) req.result.createObjectStore(TIMELINE, { keyPath: 'pieceId' });
     };
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
@@ -52,22 +52,22 @@ export function toJsonLines(events: LoggedEvent[]): string {
   return events.map((e) => JSON.stringify(e)).join('\n') + (events.length ? '\n' : '');
 }
 
-/** The full writing history of a piece, for the timeline. */
-export async function saveHistory(history: PieceHistory): Promise<void> {
+/** The full writing timeline of a piece, for the timeline. */
+export async function saveTimeline(timeline: PieceTimeline): Promise<void> {
   try {
     const db = await open();
-    db.transaction(HISTORY, 'readwrite').objectStore(HISTORY).put(history);
+    db.transaction(TIMELINE, 'readwrite').objectStore(TIMELINE).put(timeline);
   } catch {
     /* no IndexedDB: the timeline only covers this visit */
   }
 }
 
-export async function loadHistory(pieceId: string): Promise<PieceHistory | null> {
+export async function loadTimeline(pieceId: string): Promise<PieceTimeline | null> {
   try {
     const db = await open();
     return await new Promise((resolve, reject) => {
-      const req = db.transaction(HISTORY).objectStore(HISTORY).get(pieceId);
-      req.onsuccess = () => resolve((req.result as PieceHistory | undefined) ?? null);
+      const req = db.transaction(TIMELINE).objectStore(TIMELINE).get(pieceId);
+      req.onsuccess = () => resolve((req.result as PieceTimeline | undefined) ?? null);
       req.onerror = () => reject(req.error);
     });
   } catch {

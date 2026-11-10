@@ -202,3 +202,23 @@ tp53 set the core: **red = rejected or "bad", amber = unsure or "mid", green = a
 | Electric blue | Reserved for machine-suggested text (Phase 1) | Robot mark and a label |
 
 Why: a colour that always means one thing becomes a scaffold the writer reads without thinking (like traffic lights, which tp53 chose on purpose). Judgement colours (green, amber, red) are kept apart from location colours (the grain marks), so "this is a sentence alternative" never reads as "this is bad". Machine text gets a colour nothing else uses, following iA Writer's finding that a quiet grey for AI text was "too quiet". The shortcuts sheet carries a colour key.
+
+## Round 5: code review outcome (2026-11-10)
+
+The code-review step ran two reviewers side by side: one against the repo's standards (glossary, ADRs, code hygiene) and one against the spec and tickets. Everything they found is fixed except what is listed under "kept on purpose".
+
+**Standards review, fixed**
+- Glossary terms in code and copy: "version" became "alternative", the `history` module and variables became `moments` / `pieceTimeline` (glossary: Timeline, Moment, What changed; avoid History, Entry, Diff).
+- One event vocabulary: the event log and the timeline now share the same kinds (`variant-added`, `flipped`, `variant-dropped`, `ghosted`, `revived`, `stashed`, `used`), and `variant-dropped` is coloured as cutting everywhere.
+- A data-loss bug: edits made while the stored timeline was still loading were thrown away. Now they are appended after the stored moments.
+- Small hygiene: comma operators, a dead line, a redundant start call.
+
+**Spec review, fixed**
+- Recovery after an outside edit now picks the occurrence of a group's text nearest its old place, not the first one, and the notice also counts ghosted passages that could not be found.
+- "What changed" crops to whole sentences around each change, so a caption never starts mid-sentence.
+- Keybindings: a shortcut must use Ctrl, Alt or ⌘ (so it can't swallow typing), the editor's own keys (undo, redo, bold, italic, copy, paste, cut, select all) can't be taken, and resetting one row takes its default back from any action that had borrowed it, saying so.
+- Dragging an item out of Overflow onto the page now logs a `used` event, the same as Ctrl+Enter.
+
+**Kept on purpose (revisions of earlier answers)**
+- Q21 revision: Use puts the item in as a new paragraph after the paragraph holding the page caret, not at the caret. Dropping a paragraph into the middle of a sentence was never what a writer wanted in testing, and a paragraph keeps any paragraph group it carries. Drag-and-drop is there for exact placement.
+- Small scope beyond the tickets, each cheap and each in service of the spec: Markdown input rules (`# `, `> `, `**bold**`), a New button, a replay speed control on the timeline, `/healthz` and basic security headers in the server for Railway.

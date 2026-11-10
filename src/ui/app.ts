@@ -15,8 +15,8 @@ import { exportMarkdown, fromPieceFile, toPieceFile } from '../core/pieceFile';
 import { schema } from '../core/schema';
 import { samplePiece } from '../sample';
 import { AltPanel } from './altPanel';
-import { loadHistory, logEvents, readEvents, saveHistory, toJsonLines } from './eventLog';
-import { record, replay, startHistory, type PieceHistory } from '../core/history';
+import { loadTimeline, logEvents, readEvents, saveTimeline, toJsonLines } from './eventLog';
+import { record, replay, startTimeline, type PieceTimeline } from '../core/moments';
 import { Timeline } from './timeline';
 import { explode } from './explode';
 import * as files from './files';
@@ -53,7 +53,7 @@ export function startApp(root: HTMLElement): void {
   let mode: InputMode = 'caret';
   let flipSession: { id: string; original: number } | null = null;
   let autosaveTimer: ReturnType<typeof setTimeout> | undefined;
-  let history: PieceHistory;
+  let pieceTimeline: PieceTimeline;
   let historyTimer: ReturnType<typeof setTimeout> | undefined;
   let timeline: Timeline | null = null;
 
@@ -162,27 +162,33 @@ export function startApp(root: HTMLElement): void {
         panel.sync(tr.mapping);
       } else if (tr.getMeta(lookKey) === undefined) panel.sync();
       if (tr.docChanged) {
-        history = record(history, tr);
+        pieceTimeline = record(pieceTimeline, tr);
         clearTimeout(historyTimer);
-        historyTimer = setTimeout(() => void saveHistory(history), 500);
+        historyTimer = setTimeout(() => void saveTimeline(pieceTimeline), 500);
       }
       const events = eventsOf(tr);
+      // A drag out of Overflow onto the page is a Use, like Ctrl+Enter.
+      const sel = before.selection;
+      if (tr.getMeta('uiEvent') === 'drop' && !sel.empty && isInOverflow(before.doc, sel.from) && !isInOverflow(view.state.doc, view.state.selection.from))
+        events.push({ kind: 'used', text: before.doc.textBetween(sel.from, sel.to, ' ') });
       if (events.length) void logEvents(view.state.doc.attrs.id as string, events);
       if (tr.docChanged || before.doc !== view.state.doc) updateCount();
       requestAnimationFrame(redraw);
     },
   });
 
-  /** Continue the stored history if it still replays to this piece; otherwise start a new one. */
-  async function attachHistory(doc: Node): Promise<void> {
-    history = startHistory(doc);
-    const stored = await loadHistory(String(doc.attrs.id));
-    if (!stored || view.state.doc !== doc) return;
+  /** Continue the stored pieceTimeline if it still replays to this piece; otherwise start a new one. */
+  async function attachTimeline(doc: Node): Promise<void> {
+    pieceTimeline = startTimeline(doc);
+    const stored = await loadTimeline(String(doc.attrs.id));
+    // Edits made while the stored timeline was loading start from `doc`, so they
+    // can follow it; only a different piece (another file opened) means stop.
+    if (!stored || view.state.doc.attrs.id !== doc.attrs.id) return;
     try {
       const docs = replay(stored);
-      if (docs[docs.length - 1].eq(doc)) history = { ...stored, entries: [...stored.entries, ...history.entries] };
+      if (docs[docs.length - 1].eq(doc)) pieceTimeline = { ...stored, moments: [...stored.moments, ...pieceTimeline.moments] };
     } catch {
-      /* the stored history no longer replays; keep the fresh one */
+      /* the stored timeline no longer replays; keep the fresh one */
     }
   }
 
@@ -191,7 +197,7 @@ export function startApp(root: HTMLElement): void {
     panel.close();
     closeMenu();
     timeline = new Timeline({
-      history: () => history,
+      timeline: () => pieceTimeline,
       close: closeTimeline,
       editAt: (from, to) => {
         closeTimeline();
@@ -233,7 +239,7 @@ export function startApp(root: HTMLElement): void {
     panel.close();
     pieceName = name;
     view.updateState(createEditorState(withId(doc), view.state.plugins.slice(3)));
-    void attachHistory(view.state.doc);
+    void attachTimeline(view.state.doc);
     files.autosave(toPieceFile(view.state.doc), pieceName);
     updateCount();
     requestAnimationFrame(redraw);
@@ -471,8 +477,7 @@ export function startApp(root: HTMLElement): void {
   
   void document.fonts?.ready.then(() => requestAnimationFrame(redraw));
 
-  history = startHistory(view.state.doc);
-  void attachHistory(view.state.doc);
+  void attachTimeline(view.state.doc);
   updateCount();
   setOverflowEditable();
   requestAnimationFrame(redraw);

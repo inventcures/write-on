@@ -204,7 +204,7 @@ export function createGroup(target: GroupTarget, content: VariantContent): Comma
       tr.replaceWith(from, to, variantNodes(content, altType.create(attrs)));
       if (target.grain === 'word') fixArticle(tr, from, variantText(content));
     }
-    addEvents(tr, [{ kind: 'alt_added', groupId: id, grain: target.grain, text: variantText(content) }]);
+    addEvents(tr, [{ kind: 'variant-added', groupId: id, grain: target.grain, text: variantText(content) }]);
     // altDeleted: the flattened inner groups already sent their variants to Overflow.
     dispatch(tr.setMeta('altCreated', id).setMeta('altDeleted', true).scrollIntoView());
     return true;
@@ -234,7 +234,7 @@ export function addVariant(id: string, content: VariantContent): Command {
     const variants = [...loc.attrs.variants, content];
     const tr = state.tr;
     writeGroup(tr, loc, { ...loc.attrs, variants, active: variants.length - 1 }, content);
-    addEvents(tr, [{ kind: 'alt_added', groupId: id, grain: loc.attrs.grain, text: variantText(content) }]);
+    addEvents(tr, [{ kind: 'variant-added', groupId: id, grain: loc.attrs.grain, text: variantText(content) }]);
     dispatch(tr);
     return true;
   };
@@ -284,7 +284,7 @@ export function flipTo(id: string, index: number): Command {
     const shown = loc.attrs.variants[next];
     writeGroup(tr, loc, attrs, shown);
     addEvents(tr, [
-      { kind: 'alt_selected', groupId: id, grain: attrs.grain, from: loc.attrs.active, to: next, text: variantText(shown) },
+      { kind: 'flipped', groupId: id, grain: attrs.grain, from: loc.attrs.active, to: next, text: variantText(shown) },
     ]);
     dispatch(tr.setMeta('addToHistory', false).setMeta('flipped', id));
     return true;
@@ -324,7 +324,7 @@ export function deleteActiveVariant(id: string): Command {
       const next = Math.min(active, rest.length - 1);
       writeGroup(tr, loc, { ...loc.attrs, variants: rest, active: next }, rest[next]);
     }
-    addEvents(tr, [{ kind: 'alt_deleted', groupId: id, grain, text: variantText(removed) }]);
+    addEvents(tr, [{ kind: 'variant-dropped', groupId: id, grain, text: variantText(removed) }]);
     dispatch(tr.setMeta('altDeleted', id));
     return true;
   };

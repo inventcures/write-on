@@ -35,13 +35,20 @@ function occurrences(doc: Node, text: string): [number, number][] {
 
 /**
  * The piece's body was edited outside Write_On. Keep the edited text, put back
- * every group (and ghost) whose text can still be found exactly once, and move
+ * every group (and ghost) whose text can still be found (nearest to where it
+ * was, if it occurs more than once), and move
  * the variants of the rest into Overflow so nothing is lost.
  */
-export function recoverGroups(stored: Node, edited: Node): { doc: Node; lost: number } {
+/** Of several places the text occurs, the one nearest where it used to be. */
+function nearest(hits: [number, number][], was: number): [number, number] | undefined {
+  return hits.slice().sort((a, b) => Math.abs(a[0] - was) - Math.abs(b[0] - was))[0];
+}
+
+export function recoverGroups(stored: Node, edited: Node): { doc: Node; lost: number; lostGhosts: number } {
   const tr = new Transform(edited);
   const notes: string[] = [];
   let lost = 0;
+  let lostGhosts = 0;
   const storedLimit = overflowStart(stored);
 
   for (const id of allGroupIds(stored)) {
@@ -51,18 +58,23 @@ export function recoverGroups(stored: Node, edited: Node): { doc: Node; lost: nu
     const hits = occurrences(tr.doc, text);
     let placed = false;
     if (loc.blockPos !== undefined) {
-      const hit = hits.find(([from, to]) => {
+      const whole = hits.filter(([from, to]) => {
         const $from = tr.doc.resolve(from);
         return $from.parentOffset === 0 && to === $from.end() && !$from.parent.attrs.alt;
       });
-      if (hit && hits.length === 1) {
+      const hit = nearest(whole, loc.from);
+      if (hit) {
         const $from = tr.doc.resolve(hit[0]);
         tr.setNodeMarkup($from.before(), undefined, { ...$from.parent.attrs, alt: loc.attrs });
         placed = true;
       }
-    } else if (hits.length === 1 && !tr.doc.rangeHasMark(hits[0][0], hits[0][1], schema.marks.alt)) {
-      tr.addMark(hits[0][0], hits[0][1], schema.marks.alt.create(loc.attrs));
-      placed = true;
+    } else {
+      const free = hits.filter(([from, to]) => !tr.doc.rangeHasMark(from, to, schema.marks.alt));
+      const hit = nearest(free, loc.from);
+      if (hit) {
+        tr.addMark(hit[0], hit[1], schema.marks.alt.create(loc.attrs));
+        placed = true;
+      }
     }
     if (!placed) {
       lost++;
@@ -73,14 +85,15 @@ export function recoverGroups(stored: Node, edited: Node): { doc: Node; lost: nu
   stored.descendants((node, pos) => {
     if (pos >= storedLimit) return false;
     if (node.isText && schema.marks.ghost.isInSet(node.marks)) {
-      const hits = occurrences(tr.doc, node.text ?? '');
-      if (hits.length === 1) tr.addMark(hits[0][0], hits[0][1], schema.marks.ghost.create());
+      const hit = nearest(occurrences(tr.doc, node.text ?? ''), pos);
+      if (hit) tr.addMark(hit[0], hit[1], schema.marks.ghost.create());
+      else lostGhosts++;
     }
     return true;
   });
 
   appendToOverflow(tr, notes);
-  return { doc: tr.doc, lost };
+  return { doc: tr.doc, lost, lostGhosts };
 }
 
 /**

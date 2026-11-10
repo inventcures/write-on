@@ -1,6 +1,6 @@
 import type { Node } from 'prosemirror-model';
-import type { EntryKind } from './history';
-import { changeOf } from './history';
+import type { EntryKind } from './moments';
+import { changeOf } from './moments';
 
 /**
  * "What changed", for people who read words, not diffs: a word-by-word
@@ -42,17 +42,37 @@ export function compareWords(before: string, after: string): Part[] {
   return parts;
 }
 
-/** Collapse long unchanged stretches to "…", keeping a few words of context. */
-export function crop(parts: Part[], context = 8): Part[] {
+/**
+ * Collapse long unchanged stretches to "…", but never inside a sentence that
+ * holds a change: the writer always sees whole sentences around what changed.
+ */
+export function crop(parts: Part[]): Part[] {
+  const END = /[.!?]['"”’)\]]*(\s+|$)|\n\n/g;
   return parts.map((p, i) => {
     if (p.type !== 'same') return p;
-    const words = tokens(p.text);
-    const keepStart = i === 0 ? 0 : context * 2;
-    const keepEnd = i === parts.length - 1 ? 0 : context * 2;
-    if (words.length <= keepStart + keepEnd + 6) return p;
-    const head = words.slice(0, keepStart).join('');
-    const tail = words.slice(words.length - keepEnd).join('');
-    return { type: 'same', text: `${head}${head ? ' ' : ''}…${tail ? ' ' : ''}${tail}` };
+    const first = i === 0;
+    const last = i === parts.length - 1;
+    // Keep from the start up to the end of the sentence the previous change is in…
+    let headEnd = 0;
+    if (!first) {
+      END.lastIndex = 0;
+      const m = END.exec(p.text);
+      headEnd = m ? m.index + m[0].length : p.text.length;
+    }
+    // …and from the start of the sentence the next change is in.
+    let tailStart = p.text.length;
+    if (!last) {
+      tailStart = 0;
+      END.lastIndex = 0;
+      for (let m = END.exec(p.text); m; m = END.exec(p.text)) {
+        if (m.index + m[0].length < p.text.length) tailStart = m.index + m[0].length;
+        if (m[0] === '') END.lastIndex++;
+      }
+    }
+    if (tailStart <= headEnd) return p;
+    const head = p.text.slice(0, headEnd);
+    const tail = p.text.slice(tailStart);
+    return { type: 'same', text: `${head}${head && !head.endsWith(' ') ? ' ' : ''}…${tail ? ' ' : ''}${tail}` };
   });
 }
 
@@ -75,11 +95,11 @@ export function caption(kind: EntryKind, parts: Part[]): string {
   const cut = wordsIn(parts, 'cut');
   switch (kind) {
     case 'flipped':
-      return added.length ? `Tried another version: ${quote(parts, 'added', true)}` : 'Tried another version';
-    case 'version-added':
-      return added.length ? `Wrote another version: ${quote(parts, 'added', true)}` : 'Wrote another version';
-    case 'version-dropped':
-      return cut.length ? `Dropped a version: ${quote(parts, 'cut')}` : 'Dropped a version';
+      return added.length ? `Tried another alternative: ${quote(parts, 'added', true)}` : 'Tried another alternative';
+    case 'variant-added':
+      return added.length ? `Wrote another alternative: ${quote(parts, 'added', true)}` : 'Wrote another alternative';
+    case 'variant-dropped':
+      return cut.length ? `Dropped an alternative: ${quote(parts, 'cut')}` : 'Dropped an alternative';
     case 'ghosted':
       return 'Ghosted a passage, to read the piece without it';
     case 'revived':
@@ -105,7 +125,7 @@ function passage(doc: Node, from: number, to: number): string {
   return doc.textBetween(start, Math.max(start, end), '\n\n', ' ');
 }
 
-export interface Moment {
+export interface MomentView {
   caption: string;
   parts: Part[];
   /** Range of the change in the "after" document, for highlighting and jumping. */
@@ -114,7 +134,7 @@ export interface Moment {
 }
 
 /** Everything the timeline needs to show one moment. */
-export function describeMoment(kind: EntryKind, before: Node, after: Node): Moment {
+export function describeMoment(kind: EntryKind, before: Node, after: Node): MomentView {
   const change = changeOf(before, after);
   if (!change) return { caption: caption(kind, []), parts: [], from: 0, to: 0 };
   const parts = compareWords(passage(before, change.from, change.toBefore), passage(after, change.from, change.toAfter));

@@ -5,9 +5,9 @@ import { schema } from './schema';
 
 /** Something the writer did that the learning layer will want to know. */
 export type EditEvent =
-  | { kind: 'alt_added'; groupId: string; grain: string; text: string }
-  | { kind: 'alt_selected'; groupId: string; grain: string; from: number; to: number; text: string }
-  | { kind: 'alt_deleted'; groupId: string; grain: string; text: string }
+  | { kind: 'variant-added'; groupId: string; grain: string; text: string }
+  | { kind: 'flipped'; groupId: string; grain: string; from: number; to: number; text: string }
+  | { kind: 'variant-dropped'; groupId: string; grain: string; text: string }
   | { kind: 'ghosted' | 'revived'; text: string }
   | { kind: 'stashed' | 'used'; text: string };
 

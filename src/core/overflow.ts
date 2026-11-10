@@ -8,7 +8,7 @@ import { schema } from './schema';
 export function appendToOverflow<T extends Transform>(tr: T, items: (string | Fragment | Node)[]): T {
   const paragraphs = items
     .map((item) => {
-      // A whole block keeps its paragraph group, so its versions travel with it.
+      // A whole block keeps its paragraph group, so its variants travel with it.
       if (item instanceof Fragment) return schema.nodes.paragraph.create(null, item);
       if (typeof item === 'string') return schema.nodes.paragraph.create(null, item ? schema.text(item) : null);
       return schema.nodes.paragraph.create({ alt: item.attrs.alt ?? null }, item.content);

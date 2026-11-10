@@ -1,33 +1,24 @@
 import { Node } from 'prosemirror-model';
 import type { Transaction } from 'prosemirror-state';
 import { ReplaceStep, Step } from 'prosemirror-transform';
-import { eventsOf } from './piece';
+import { eventsOf, type EditEvent } from './piece';
 import { schema } from './schema';
 
 /**
- * The piece's full writing history: the document it started from and every
+ * The piece's full writing timeline: the document it started from and every
  * change since, as ProseMirror steps, so it can be replayed exactly. This is
- * separate from undo history and is never written into the piece file.
+ * separate from undo timeline and is never written into the piece file.
  */
-export type EntryKind =
-  | 'typed'
-  | 'deleted'
-  | 'edited'
-  | 'version-added'
-  | 'version-dropped'
-  | 'flipped'
-  | 'ghosted'
-  | 'revived'
-  | 'stashed'
-  | 'used';
+/** What a moment was: a burst of writing, or one of the writer's choices (from the event log). */
+export type EntryKind = 'typed' | 'deleted' | 'edited' | EditEvent['kind'];
 
 /** The families the timeline colours by. */
 export const KIND_FAMILY: Record<EntryKind, 'writing' | 'cutting' | 'alternatives' | 'ghost' | 'overflow'> = {
   typed: 'writing',
   edited: 'writing',
   deleted: 'cutting',
-  'version-added': 'alternatives',
-  'version-dropped': 'alternatives',
+  'variant-added': 'alternatives',
+  'variant-dropped': 'cutting',
   flipped: 'alternatives',
   ghosted: 'ghost',
   revived: 'ghost',
@@ -35,34 +26,28 @@ export const KIND_FAMILY: Record<EntryKind, 'writing' | 'cutting' | 'alternative
   used: 'overflow',
 };
 
-export interface HistoryEntry {
+export interface Moment {
   t: number;
   kind: EntryKind;
   steps: Record<string, unknown>[];
 }
 
-export interface PieceHistory {
+export interface PieceTimeline {
   pieceId: string;
   start: Record<string, unknown>;
-  entries: HistoryEntry[];
+  moments: Moment[];
 }
 
 /** Writing within this many ms of the last change joins the same moment. */
 export const COALESCE_MS = 1000;
 
-export function startHistory(doc: Node): PieceHistory {
-  return { pieceId: String(doc.attrs.id), start: doc.toJSON(), entries: [] };
+export function startTimeline(doc: Node): PieceTimeline {
+  return { pieceId: String(doc.attrs.id), start: doc.toJSON(), moments: [] };
 }
 
 function kindOf(tr: Transaction): EntryKind {
   const events = eventsOf(tr);
-  if (events.length) {
-    const k = events[0].kind;
-    if (k === 'alt_selected') return 'flipped';
-    if (k === 'alt_added') return 'version-added';
-    if (k === 'alt_deleted') return 'version-dropped';
-    return k;
-  }
+  if (events.length) return events[0].kind;
   let inserts = false;
   let deletes = false;
   for (const step of tr.steps) {
@@ -76,32 +61,32 @@ function kindOf(tr: Transaction): EntryKind {
   return 'edited';
 }
 
-/** Add a transaction to the history; bursts of typing (or deleting) coalesce. */
-export function record(history: PieceHistory, tr: Transaction, now = Date.now()): PieceHistory {
-  if (!tr.docChanged) return history;
+/** Add a transaction to the timeline; bursts of typing (or deleting) coalesce. */
+export function record(timeline: PieceTimeline, tr: Transaction, now = Date.now()): PieceTimeline {
+  if (!tr.docChanged) return timeline;
   const kind = kindOf(tr);
   const steps = tr.steps.map((s) => s.toJSON() as Record<string, unknown>);
-  const last = history.entries[history.entries.length - 1];
-  const entries = history.entries.slice();
+  const last = timeline.moments[timeline.moments.length - 1];
+  const moments = timeline.moments.slice();
   const writing = (k: EntryKind) => k === 'typed' || k === 'deleted' || k === 'edited';
   if (last && writing(last.kind) && writing(kind) && now - last.t < COALESCE_MS) {
     // One burst of writing is one moment, even with a few corrections in it.
     const merged: EntryKind = last.kind === kind ? kind : 'edited';
-    entries[entries.length - 1] = { ...last, t: now, kind: merged, steps: [...last.steps, ...steps] };
+    moments[moments.length - 1] = { ...last, t: now, kind: merged, steps: [...last.steps, ...steps] };
   } else {
-    entries.push({ t: now, kind, steps });
+    moments.push({ t: now, kind, steps });
   }
-  return { ...history, entries };
+  return { ...timeline, moments };
 }
 
 /** Every document the piece has been: index 0 is the start, index i is after entry i - 1. */
-export function replay(history: PieceHistory): Node[] {
-  let doc = Node.fromJSON(schema, history.start);
+export function replay(timeline: PieceTimeline): Node[] {
+  let doc = Node.fromJSON(schema, timeline.start);
   const docs = [doc];
-  for (const entry of history.entries) {
+  for (const entry of timeline.moments) {
     for (const json of entry.steps) {
       const result = Step.fromJSON(schema, json).apply(doc);
-      if (result.failed || !result.doc) throw new Error(`history no longer replays: ${result.failed}`);
+      if (result.failed || !result.doc) throw new Error(`timeline no longer replays: ${result.failed}`);
       doc = result.doc;
     }
     docs.push(doc);
@@ -117,15 +102,21 @@ export function changeOf(before: Node, after: Node): { from: number; toBefore: n
   let toBefore = end.a;
   let toAfter = end.b;
   // findDiffEnd can overlap findDiffStart when text repeats; clamp.
-  if (toBefore < from) toAfter += from - toBefore, (toBefore = from);
-  if (toAfter < from) toBefore += from - toAfter, (toAfter = from);
+  if (toBefore < from) {
+    toAfter += from - toBefore;
+    toBefore = from;
+  }
+  if (toAfter < from) {
+    toBefore += from - toAfter;
+    toAfter = from;
+  }
   return { from, toBefore, toAfter };
 }
 
 /** Map a position in the document after entry `index` to the current document. */
-export function mapToNow(history: PieceHistory, index: number, pos: number): number | null {
+export function mapToNow(timeline: PieceTimeline, index: number, pos: number): number | null {
   let mapped = pos;
-  for (const entry of history.entries.slice(index + 1)) {
+  for (const entry of timeline.moments.slice(index + 1)) {
     for (const json of entry.steps) {
       const result = Step.fromJSON(schema, json).getMap().mapResult(mapped, 1);
       if (result.deleted) return null;

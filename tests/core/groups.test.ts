@@ -13,6 +13,7 @@ import {
   textVariant,
   variantText,
 } from '../../src/core/groups';
+import { toggleGhost } from '../../src/core/ghost';
 import { eventsOf } from '../../src/core/piece';
 import { fromPieceFile, toPieceFile } from '../../src/core/pieceFile';
 import { caret, find, overflowText, pageText, piece, run, select, typeText } from './helpers';
@@ -107,7 +108,7 @@ describe('word and sentence groups', () => {
       events = eventsOf(tr);
       state = state.apply(tr);
     });
-    expect(events).toEqual([expect.objectContaining({ kind: 'alt_added', grain: 'word', text: 'pin' })]);
+    expect(events).toEqual([expect.objectContaining({ kind: 'variant-added', grain: 'word', text: 'pin' })]);
   });
 });
 
@@ -152,7 +153,7 @@ describe('flipping', () => {
     const { state, id } = wordGroup('thumbtack', 'paperclip');
     let events: unknown[] = [];
     flip(id, 1)(state, (tr) => (events = eventsOf(tr)));
-    expect(events).toEqual([expect.objectContaining({ kind: 'alt_selected', from: 1, to: 0, text: 'thumbtack' })]);
+    expect(events).toEqual([expect.objectContaining({ kind: 'flipped', from: 1, to: 0, text: 'thumbtack' })]);
   });
 });
 
@@ -208,5 +209,24 @@ describe('nothing is ever lost', () => {
     const { doc, notice } = fromPieceFile(file);
     expect(doc.lastChild!.textContent).toBe('from “paperclip”: thumbtack');
     expect(notice).toMatch(/1 alternative group/);
+  });
+});
+
+describe('outside edits, more precisely', () => {
+  it('places a group whose word occurs more than once at the nearest occurrence', () => {
+    let state = select(piece('The cat sat. The dog ran.'), 'dog');
+    state = run(state, createGroup(targetForSelection(state)!, textVariant('cat')));
+    const id = groupAt(state.doc, find(state, 'cat', { nth: 1 })[0])!;
+    const { doc } = fromPieceFile(toPieceFile(state.doc).replace('sat', 'sits'));
+    const loc = findGroup(doc, id)!;
+    expect(doc.textBetween(loc.from - 4, loc.to)).toBe('The cat');
+    expect(loc.from).toBeGreaterThan(10);
+  });
+
+  it('says when a ghosted passage could not be found again', () => {
+    let state = select(piece('Keep this. Maybe cut this.'), 'Maybe cut this.');
+    state = run(state, toggleGhost);
+    const { notice } = fromPieceFile(toPieceFile(state.doc).replace('Maybe cut this.', 'Maybe cut that.'));
+    expect(notice).toMatch(/1 ghosted passage was changed/);
   });
 });

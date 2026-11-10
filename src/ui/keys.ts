@@ -20,8 +20,8 @@ export type ActionId =
 export const ACTIONS: { id: ActionId; label: string; combo: string }[] = [
   { id: 'read', label: 'Read mode: tools in or out', combo: 'Ctrl+Shift+KeyR' },
   { id: 'alternatives', label: 'Alternatives for selection or word', combo: 'Ctrl+Shift+KeyA' },
-  { id: 'flipNext', label: 'Next version of the group at the caret', combo: 'Ctrl+BracketRight' },
-  { id: 'flipPrev', label: 'Previous version of the group at the caret', combo: 'Ctrl+BracketLeft' },
+  { id: 'flipNext', label: 'Next alternative of the group at the caret', combo: 'Ctrl+BracketRight' },
+  { id: 'flipPrev', label: 'Previous alternative of the group at the caret', combo: 'Ctrl+BracketLeft' },
   { id: 'ghost', label: 'Ghost it / Revive it', combo: 'Ctrl+Slash' },
   { id: 'stash', label: 'Stash in Overflow', combo: 'Ctrl+Shift+KeyX' },
   { id: 'overflow', label: 'Overflow panel', combo: 'Ctrl+Shift+KeyD' },
@@ -35,11 +35,26 @@ export const ACTIONS: { id: ActionId; label: string; combo: string }[] = [
 /** Shortcuts that are part of the editor itself and can't be changed. */
 export const FIXED: [string, string][] = [
   ['Flip the hovered group', 'hover + ← →'],
-  ['Delete the showing version', 'hover + Delete'],
+  ['Delete the showing alternative', 'hover + Delete'],
   ['Undo, Redo', 'Ctrl+Z  Ctrl+Shift+Z'],
   ['Bold, Italic', 'Ctrl+B  Ctrl+I'],
   ['Close a panel or sheet', 'Esc'],
 ];
+
+/** Combos the editor itself owns; binding them would break typing or undo. */
+const RESERVED = new Set([
+  'Ctrl+KeyZ', 'Ctrl+Shift+KeyZ', 'Ctrl+KeyY', 'Ctrl+KeyB', 'Ctrl+KeyI',
+  'Meta+KeyZ', 'Meta+Shift+KeyZ', 'Meta+KeyY', 'Meta+KeyB', 'Meta+KeyI',
+  'Ctrl+KeyC', 'Ctrl+KeyV', 'Ctrl+KeyX', 'Ctrl+KeyA',
+  'Meta+KeyC', 'Meta+KeyV', 'Meta+KeyX', 'Meta+KeyA',
+]);
+
+/** Why `combo` can't be a shortcut, or null if it can. */
+export function rejectReason(combo: string): string | null {
+  if (!/(^|\+)(Ctrl|Alt|Meta)\+/.test(combo)) return 'A shortcut needs Ctrl, Alt or ⌘, so it never gets in the way of typing.';
+  if (RESERVED.has(combo)) return `${pretty(combo)} belongs to the editor (undo, bold, copy and the like).`;
+  return null;
+}
 
 const STORAGE = 'write-on:keys';
 const MODIFIER_CODES = /^(Shift|Control|Alt|Meta)(Left|Right)?$/;
@@ -106,10 +121,19 @@ export class Keybindings {
     return loser;
   }
 
-  reset(id?: ActionId): void {
-    if (id) delete this.custom[id];
-    else this.custom = {};
+  /** Back to the default. Returns the action that held the default and lost it, if any. */
+  reset(id?: ActionId): ActionId | null {
+    if (!id) {
+      this.custom = {};
+      this.persist();
+      return null;
+    }
+    delete this.custom[id];
+    const combo = this.combo(id);
+    const loser = ACTIONS.find((a) => a.id !== id && this.combo(a.id) === combo)?.id ?? null;
+    if (loser) this.custom[loser] = '';
     this.persist();
+    return loser;
   }
 
   private persist(): void {
@@ -155,8 +179,9 @@ export function keybindingsEditor(keys: Keybindings, onChange: () => void): HTML
       reset.textContent = 'reset';
       reset.disabled = keys.isDefault(action.id);
       reset.onclick = () => {
-        keys.reset(action.id);
-        note.textContent = `${action.label}: back to ${pretty(keys.combo(action.id))}.`;
+        const loser = keys.reset(action.id);
+        note.textContent = `${action.label}: back to ${pretty(keys.combo(action.id))}.` +
+          (loser ? ` “${ACTIONS.find((a) => a.id === loser)!.label}” had those keys and is now not set.` : '');
         render();
         onChange();
       };
@@ -186,6 +211,11 @@ export function keybindingsEditor(keys: Keybindings, onChange: () => void): HTML
       }
       const combo = comboOf(e);
       if (!combo) return;
+      const why = rejectReason(combo);
+      if (why) {
+        note.textContent = `${why} Try other keys, or Esc to cancel.`;
+        return;
+      }
       const { id } = capturing;
       capturing = null;
       const loser = keys.set(id, combo);

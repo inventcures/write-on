@@ -62,6 +62,18 @@ _Avoid_: Cut, park
 The append-only record of what the writer did with variants, ghosts and Overflow, kept per piece; the learning layer's source.
 _Avoid_: History, telemetry, analytics
 
+**Timeline**:
+The replayable record of a piece: the document it started from and every moment since, kept beside the piece, never in its file.
+_Avoid_: History (that's undo), version history, changelog
+
+**Moment**:
+One step on the timeline: a burst of writing or one choice (a flip, a ghost, a stash), shown with what changed.
+_Avoid_: Entry, revision, commit, diff
+
+**What changed**:
+How a moment is shown: the passage as it reads afterwards, with added words marked green and cut words struck through in red.
+_Avoid_: Diff, delta, patch
+
 **Lab**:
 The AI that marks and trims a piece but never writes new sentences into it.
 _Avoid_: Assistant, AI rewrite

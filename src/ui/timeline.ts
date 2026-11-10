@@ -1,8 +1,8 @@
 import type { Node } from 'prosemirror-model';
 import { EditorState } from 'prosemirror-state';
 import { Decoration, DecorationSet, EditorView } from 'prosemirror-view';
-import { describeMoment, type Moment } from '../core/changes';
-import { KIND_FAMILY, mapToNow, replay, type PieceHistory } from '../core/history';
+import { describeMoment, type MomentView } from '../core/changes';
+import { KIND_FAMILY, mapToNow, replay, type PieceTimeline } from '../core/moments';
 import { overflowStart } from '../core/piece';
 import { schema } from '../core/schema';
 
@@ -17,7 +17,7 @@ const SPEEDS = [1, 4, 16];
 const PAUSE_GAP_MS = 10 * 60 * 1000;
 
 export interface TimelineHost {
-  history(): PieceHistory;
+  timeline(): PieceTimeline;
   /** Close the timeline and take the writer to this range in the current piece. */
   editAt(from: number, to: number): void;
   close(): void;
@@ -39,15 +39,15 @@ export class Timeline {
   private speedBtn: HTMLButtonElement;
   private snapshot: EditorView;
   private docs: Node[] = [];
-  private history: PieceHistory;
+  private timeline: PieceTimeline;
   private index = 0;
   private zoom = 8;
   private speed = 0;
   private timer: ReturnType<typeof setInterval> | undefined;
-  private moment: Moment | null = null;
+  private moment: MomentView | null = null;
 
   constructor(private host: TimelineHost) {
-    this.history = host.history();
+    this.timeline = host.timeline();
     this.root = document.createElement('section');
     this.root.className = 'timeline';
     this.root.setAttribute('role', 'dialog');
@@ -142,13 +142,13 @@ export class Timeline {
   open(): void {
     document.body.append(this.root);
     try {
-      this.docs = replay(this.history);
+      this.docs = replay(this.timeline);
     } catch {
       this.docs = [];
     }
     this.root.focus();
     this.fit();
-    this.select(this.history.entries.length - 1);
+    this.select(this.timeline.moments.length - 1);
   }
 
   destroy(): void {
@@ -158,7 +158,7 @@ export class Timeline {
   }
 
   private get count(): number {
-    return this.history.entries.length;
+    return this.timeline.moments.length;
   }
 
   private fit(): void {
@@ -193,7 +193,7 @@ export class Timeline {
     g.lineTo(width, height / 2);
     g.stroke();
     const w = Math.max(1, this.zoom - (this.zoom > 4 ? 1.5 : 0));
-    this.history.entries.forEach((entry, i) => {
+    this.timeline.moments.forEach((entry, i) => {
       const family = KIND_FAMILY[entry.kind] ?? 'writing';
       const x = i * this.zoom;
       const selected = i === this.index;
@@ -207,7 +207,7 @@ export class Timeline {
         g.fillStyle = '#050a1c';
         for (let sy = y + 2; sy < y + h; sy += 5) g.fillRect(x, sy, w, 1.5);
       }
-      const prev = this.history.entries[i - 1];
+      const prev = this.timeline.moments[i - 1];
       if (prev && entry.t - prev.t > PAUSE_GAP_MS) {
         g.globalAlpha = 0.5;
         g.fillStyle = '#f5d1c0';
@@ -234,7 +234,7 @@ export class Timeline {
       return;
     }
     this.index = Math.max(0, Math.min(this.count - 1, i));
-    const entry = this.history.entries[this.index];
+    const entry = this.timeline.moments[this.index];
     const before = this.docs[this.index];
     const after = this.docs[this.index + 1];
     this.moment = describeMoment(entry.kind, before, after);
@@ -252,7 +252,7 @@ export class Timeline {
   }
 
   /** Added words highlighted, cut words faded and struck through in place. */
-  private renderChange(moment: Moment): void {
+  private renderChange(moment: MomentView): void {
     this.changeEl.replaceChildren();
     for (const part of moment.parts) {
       const el = document.createElement(part.type === 'added' ? 'ins' : part.type === 'cut' ? 'del' : 'span');
@@ -295,26 +295,29 @@ export class Timeline {
     }
     if (this.index >= this.count - 1) this.select(0);
     this.playBtn.textContent = '❚❚ Pause';
-    const step = () => {
-      if (this.index >= this.count - 1) return this.togglePlay();
-      this.select(this.index + 1);
-    };
-    this.timer = setInterval(step, 900 / SPEEDS[this.speed]);
+    this.restartPlay();
+  }
+
+  private restartPlay(): void {
+    clearInterval(this.timer);
+    this.timer = setInterval(() => this.advance(), 900 / SPEEDS[this.speed]);
+  }
+
+  private advance(): void {
+    if (this.index >= this.count - 1) this.togglePlay();
+    else this.select(this.index + 1);
   }
 
   private cycleSpeed(): void {
     this.speed = (this.speed + 1) % SPEEDS.length;
     this.speedBtn.textContent = `${SPEEDS[this.speed]}×`;
-    if (this.timer) {
-      this.togglePlay();
-      this.togglePlay();
-    }
+    if (this.timer) this.restartPlay();
   }
 
   private editHere(): void {
     if (!this.moment || !this.count) return;
-    const from = mapToNow(this.history, this.index, this.moment.from);
-    const to = mapToNow(this.history, this.index, this.moment.to);
+    const from = mapToNow(this.timeline, this.index, this.moment.from);
+    const to = mapToNow(this.timeline, this.index, this.moment.to);
     if (from === null) {
       this.captionEl.textContent = 'That passage has since been cut from the piece, so there is nowhere to edit it.';
       return;

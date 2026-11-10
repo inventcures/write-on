@@ -90,6 +90,10 @@ test('rebinds a shortcut in the shortcuts sheet', async ({ page }) => {
   const sheet = page.getByRole('dialog', { name: 'Shortcuts and colours' });
   const row = sheet.getByRole('row', { name: /Ghost it/ });
   await row.getByRole('button', { name: 'Ctrl+/' }).click();
+  await page.keyboard.press('g');
+  await expect(sheet).toContainText('needs Ctrl, Alt or');
+  await page.keyboard.press('Control+z');
+  await expect(sheet).toContainText('belongs to the editor');
   await page.keyboard.press('Control+g');
   await expect(row.getByRole('button', { name: 'Ctrl+G' })).toBeVisible();
   await expect(sheet).toContainText('What the colours mean');

@@ -11,7 +11,7 @@ Every sentence starts as a sketch. The trick is not to throw the first try away,
 
 A draft is an argument with yourself. You win it by reading each version in place, in the sentence it has to live in, and keeping the one that sounds like you. Some lines are not wrong, just not yet, so you ghost them and read around them.
 
-Press Ctrl+Shift+R to bring the tools in or out, Ctrl+Shift+A to give a word, sentence or paragraph another version, and Ctrl+/ to ghost. Anything you can't use here goes to Overflow with Ctrl+Shift+X.`;
+Press Ctrl+Shift+R to bring the tools in or out, Ctrl+Shift+A to give a word, sentence or paragraph an alternative, and Ctrl+/ to ghost. Anything you can't use here goes to Overflow with Ctrl+Shift+X.`;
 
 const OVERFLOW = 'Most first drafts are a conversation you have not finished having.';
 
@@ -47,8 +47,8 @@ export function samplePiece(): Node {
   group('sketch', 'outline', 'rough guess');
   group('A draft is an argument with yourself.', 'Writing is thinking out loud, slowly.');
   group(
-    "Press Ctrl+Shift+R to bring the tools in or out, Ctrl+Shift+A to give a word, sentence or paragraph another version, and Ctrl+/ to ghost. Anything you can't use here goes to Overflow with Ctrl+Shift+X.",
-    'Tools: Ctrl+Shift+R. Another version: Ctrl+Shift+A. Ghost: Ctrl+/. Overflow: Ctrl+Shift+X.',
+    "Press Ctrl+Shift+R to bring the tools in or out, Ctrl+Shift+A to give a word, sentence or paragraph an alternative, and Ctrl+/ to ghost. Anything you can't use here goes to Overflow with Ctrl+Shift+X.",
+    'Tools: Ctrl+Shift+R. Alternatives: Ctrl+Shift+A. Ghost: Ctrl+/. Overflow: Ctrl+Shift+X.',
   );
   select('Some lines are not wrong, just not yet, so you ghost them and read around them.');
   run(toggleGhost);
