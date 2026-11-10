@@ -6,6 +6,7 @@
 export type ActionId =
   | 'read'
   | 'alternatives'
+  | 'suggest'
   | 'flipNext'
   | 'flipPrev'
   | 'ghost'
@@ -20,6 +21,7 @@ export type ActionId =
 export const ACTIONS: { id: ActionId; label: string; combo: string }[] = [
   { id: 'read', label: 'Read mode: tools in or out', combo: 'Ctrl+Shift+KeyR' },
   { id: 'alternatives', label: 'Alternatives for selection or word', combo: 'Ctrl+Shift+KeyA' },
+  { id: 'suggest', label: 'Suggest 3 alternatives (machine, shown in blue)', combo: 'Ctrl+Shift+KeyG' },
   { id: 'flipNext', label: 'Next alternative of the group at the caret', combo: 'Ctrl+BracketRight' },
   { id: 'flipPrev', label: 'Previous alternative of the group at the caret', combo: 'Ctrl+BracketLeft' },
   { id: 'ghost', label: 'Ghost it / Revive it', combo: 'Ctrl+Slash' },

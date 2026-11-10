@@ -9,7 +9,7 @@ const BODY = `# Write it three ways
 
 Every sentence starts as a sketch. The trick is not to throw the first try away, but to keep it close while you try another. Hover an underlined word and press the arrow keys to hear the options.
 
-A draft is an argument with yourself. You win it by reading each version in place, in the sentence it has to live in, and keeping the one that sounds like you. Some lines are not wrong, just not yet, so you ghost them and read around them.
+A draft is an argument with yourself. You win it by reading each alternative in place, in the sentence it has to live in, and keeping the one that sounds like you. Some lines are not wrong, just not yet, so you ghost them and read around them.
 
 Press Ctrl+Shift+R to bring the tools in or out, Ctrl+Shift+A to give a word, sentence or paragraph an alternative, and Ctrl+/ to ghost. Anything you can't use here goes to Overflow with Ctrl+Shift+X.`;
 

@@ -4,6 +4,7 @@ import { stat } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { aiConfig, rateLimiter, suggest } from './server/suggest.mjs';
 
 const root = join(fileURLToPath(new URL('.', import.meta.url)), 'dist');
 const port = Number(process.env.PORT) || 4173;
@@ -17,12 +18,54 @@ const types = {
   '.json': 'application/json',
   '.ico': 'image/x-icon',
   '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.mp4': 'video/mp4',
+  '.vtt': 'text/vtt; charset=utf-8',
+  '.webm': 'video/webm',
 };
+
+const limit = rateLimiter();
+const json = (res, status, body) =>
+  res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }).end(JSON.stringify(body));
+
+function readBody(req, max = 20_000) {
+  return new Promise((resolve) => {
+    let size = 0;
+    const chunks = [];
+    req.on('data', (c) => {
+      size += c.length;
+      if (size > max) {
+        resolve(null);
+        req.destroy();
+      } else chunks.push(c);
+    });
+    req.on('end', () => {
+      try {
+        resolve(JSON.parse(Buffer.concat(chunks).toString('utf8')));
+      } catch {
+        resolve(null);
+      }
+    });
+    req.on('error', () => resolve(null));
+  });
+}
 
 createServer(async (req, res) => {
   const url = new URL(req.url ?? '/', 'http://localhost');
   if (url.pathname === '/healthz') {
     res.writeHead(200, { 'content-type': 'text/plain' }).end('ok');
+    return;
+  }
+  if (url.pathname === '/api/ai') {
+    json(res, 200, { enabled: aiConfig(process.env).enabled });
+    return;
+  }
+  if (url.pathname === '/api/suggest') {
+    if (req.method !== 'POST') return json(res, 405, { error: 'POST only' });
+    const input = await readBody(req);
+    const ip = String(req.headers['x-real-ip'] ?? req.headers['x-forwarded-for'] ?? req.socket.remoteAddress ?? '').split(',')[0].trim();
+    const out = await suggest(input, req.headers, { env: process.env, fetch, ip, now: Date.now(), limit });
+    json(res, out.status, out.body);
     return;
   }
   let path = '/';
@@ -40,11 +83,29 @@ createServer(async (req, res) => {
     file = join(root, 'index.html');
   }
   const ext = extname(file);
-  res.writeHead(200, {
+  const headers = {
     'content-type': types[ext] ?? 'application/octet-stream',
     'cache-control': file.includes(`${join(root, 'assets')}`) ? 'public, max-age=31536000, immutable' : 'no-cache',
     'x-content-type-options': 'nosniff',
     'referrer-policy': 'no-referrer',
-  });
+    'accept-ranges': 'bytes',
+  };
+  const { size } = await stat(file);
+  // Byte ranges, so video can seek (Safari won't play without them).
+  const range = /^bytes=(\d*)-(\d*)$/.exec(String(req.headers.range ?? ''));
+  if (range && (range[1] || range[2])) {
+    let start = range[1] ? Number(range[1]) : Math.max(0, size - Number(range[2]));
+    let end = range[1] && range[2] ? Math.min(Number(range[2]), size - 1) : size - 1;
+    if (start > end || start >= size) {
+      res.writeHead(416, { 'content-range': `bytes */${size}` }).end();
+      return;
+    }
+    res.writeHead(206, { ...headers, 'content-range': `bytes ${start}-${end}/${size}`, 'content-length': end - start + 1 });
+    if (req.method === 'HEAD') return res.end();
+    createReadStream(file, { start, end }).pipe(res);
+    return;
+  }
+  res.writeHead(200, { ...headers, 'content-length': size });
+  if (req.method === 'HEAD') return res.end();
   createReadStream(file).pipe(res);
 }).listen(port, () => console.log(`write-on listening on ${port}`));

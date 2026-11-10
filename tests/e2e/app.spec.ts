@@ -4,7 +4,10 @@ const pieceFile = (page: Page) => page.evaluate(() => (window as unknown as { wr
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
-  await page.evaluate(() => localStorage.clear());
+  await page.evaluate(() => {
+    localStorage.clear();
+    localStorage.setItem('write-on:welcomed', '1');
+  });
   await page.reload();
 });
 
@@ -102,4 +105,77 @@ test('rebinds a shortcut in the shortcuts sheet', async ({ page }) => {
   const before = await page.locator('.ghost').count();
   await page.keyboard.press('Control+g');
   await expect(page.locator('.ghost')).toHaveCount(before + 1);
+});
+
+test('suggestions arrive in blue under the writer\'s word, behind the access code', async ({ page }) => {
+  let asked: { text?: string; grain?: string; code?: string } = {};
+  let calls = 0;
+  await page.route('**/api/ai', (r) => r.fulfill({ json: { enabled: true } }));
+  await page.route('**/api/suggest', async (r) => {
+    asked = { ...r.request().postDataJSON(), code: r.request().headers()['x-write-on-code'] };
+    if (asked.code !== 'sesame') return r.fulfill({ status: 401, json: { error: 'That access code isn’t right.' } });
+    calls++;
+    return r.fulfill({ json: { alternatives: calls === 1 ? ['effort', 'attempt', 'go'] : ['stab', 'shot'] } });
+  });
+  await page.reload();
+  await page.keyboard.press('Control+Shift+R');
+  await page.getByText('first try away', { exact: false }).click();
+  await page.keyboard.press('Control+Shift+G');
+  const panel = page.locator('.alt-panel');
+  await panel.getByLabel('Access code for suggestions').fill('sesame');
+  await panel.getByRole('button', { name: 'ok' }).click();
+  await expect(panel.locator('.row.machine')).toHaveCount(3);
+  expect(asked.grain).toBe('word');
+  // Asking again from the button, with the code remembered and the caret in a row,
+  // still leaves the writer's word on the page.
+  await panel.locator('.row textarea').last().focus();
+  await page.keyboard.press('Control+Shift+G');
+  await expect(panel.locator('.row.machine')).toHaveCount(5);
+  await expect(panel.locator('.row.on')).not.toHaveClass(/machine/);
+  await expect(panel.locator('.row.machine').first()).toHaveAttribute('data-by', 'suggested');
+  // The page still shows the writer's own word.
+  const file = await pieceFile(page);
+  expect(file).toContain('"authors"');
+  await page.keyboard.press('Escape');
+  const pageText = page.locator('.ProseMirror > :not(aside)');
+  await expect(pageText.first()).toBeVisible();
+  const shown = (await pageText.allTextContents()).join(' ');
+  expect(shown).toContain(String(asked.text));
+  expect(shown).not.toMatch(/\b(effort|attempt|stab|shot)\b/);
+});
+
+test('a first visit explains itself and the tour waits for each step', async ({ page }) => {
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  const welcome = page.getByRole('dialog', { name: 'Welcome to Write_On' });
+  await expect(welcome).toBeVisible();
+  await expect(welcome).toContainText('Alternatives');
+  await expect(welcome).toContainText('Ghost');
+  await expect(welcome).toContainText('Overflow');
+  await expect(welcome.getByRole('link', { name: 'pair programming' })).toHaveAttribute('href', /on-pair-programming/);
+  await welcome.getByRole('button', { name: /Show me how/ }).click();
+  await expect(welcome).toBeHidden();
+  await expect(page.locator('body')).not.toHaveClass(/read/);
+  const tour = page.locator('.tour');
+  await expect(tour).toContainText('1 of 5');
+  // Step 1 waits for a flip.
+  const sketch = page.locator('.alt-word', { hasText: 'sketch' });
+  await sketch.hover();
+  await page.keyboard.press('ArrowRight');
+  await expect(tour).toContainText('2 of 5');
+  // Step 2: the Alternatives button keeps the caret where it was.
+  await page.getByText('first try away', { exact: false }).click();
+  await page.getByRole('button', { name: /^Alternatives for the word/ }).click();
+  await page.keyboard.type('quickly');
+  await expect(tour).toContainText('3 of 5');
+  await page.keyboard.press('Escape');
+  await tour.getByRole('button', { name: 'Skip the tour' }).click();
+  await expect(tour).toBeHidden();
+  // Seen once: not shown again, but ? brings it back.
+  await page.reload();
+  await expect(welcome).toBeHidden();
+  await page.getByRole('button', { name: /Welcome and tour/ }).click();
+  await expect(welcome).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(welcome).toBeHidden();
 });

@@ -1,6 +1,8 @@
 import type { EditorView } from 'prosemirror-view';
 import {
+  addMachineVariants,
   addVariant,
+  authorsOf,
   createGroup,
   findGroup,
   flipTo,
@@ -13,6 +15,7 @@ import {
 import { wordAt, sentenceRanges } from '../core/text';
 import type { Grain } from '../core/schema';
 import { lookKey, setLook } from './viewPlugins';
+import { accessCode, contextAround, requestSuggestions, setAccessCode, suggestionsEnabled } from './suggestions';
 
 const GRAINS: Grain[] = ['word', 'sentence', 'paragraph'];
 const LABEL: Record<Grain, string> = { word: 'Word', sentence: 'Sentence', paragraph: 'Paragraph' };
@@ -29,6 +32,8 @@ export class AltPanel {
   private groupId: string | null = null;
   private target: GroupTarget | null = null;
   private onFlip: (id: string, from: number, to: number) => void;
+  private ask: HTMLElement;
+  private busy = false;
 
   constructor(
     private view: () => EditorView,
@@ -44,7 +49,14 @@ export class AltPanel {
     this.rows.className = 'rows';
     const foot = document.createElement('footer');
     foot.textContent = 'return adds · esc closes';
-    this.el.append(this.tabs, this.rows, foot);
+    this.ask = document.createElement('div');
+    this.ask.className = 'ask';
+    this.ask.hidden = true;
+    void suggestionsEnabled().then((on) => {
+      this.ask.hidden = !on;
+      this.renderAsk('');
+    });
+    this.el.append(this.tabs, this.rows, this.ask, foot);
     this.el.addEventListener('keydown', (e) => this.onKey(e));
   }
 
@@ -138,13 +150,14 @@ export class AltPanel {
     const loc = this.groupId ? findGroup(view.state.doc, this.groupId) : null;
     const texts = loc ? loc.attrs.variants.map(variantText) : [view.state.doc.textBetween(range.from, range.to)];
     const active = loc ? loc.attrs.active : 0;
+    const authors = loc ? authorsOf(loc.attrs) : [null];
     const focused = document.activeElement as HTMLTextAreaElement | null;
     const existing = Array.from(this.rows.querySelectorAll('textarea'));
 
     // Rebuild only when the number of rows changed; otherwise update values in place.
     if (existing.length !== texts.length + 1) {
       const keep = focused && this.rows.contains(focused) ? { index: Number(focused.dataset.index), caret: focused.selectionStart } : null;
-      this.rows.replaceChildren(...texts.map((t, i) => this.row(t, i, i === active, grain)), this.row('', texts.length, false, grain));
+      this.rows.replaceChildren(...texts.map((t, i) => this.row(t, i, i === active, grain, authors[i])), this.row('', texts.length, false, grain, null));
       if (keep && !focusNew) {
         const area = this.rows.querySelectorAll('textarea')[keep.index];
         area?.focus();
@@ -154,16 +167,19 @@ export class AltPanel {
       existing.forEach((area, i) => {
         const wanted = i < texts.length ? texts[i] : '';
         if (area !== focused && area.value !== wanted) area.value = wanted;
-        area.closest('.row')!.classList.toggle('on', i === active);
+        const row = area.closest('.row')!;
+        row.classList.toggle('on', i === active);
+        this.markAuthor(row as HTMLElement, i < texts.length ? authors[i] : null);
         autosize(area);
       });
     }
     if (focusNew) (this.rows.lastElementChild?.querySelector('textarea') as HTMLTextAreaElement | null)?.focus();
   }
 
-  private row(text: string, index: number, on: boolean, grain: Grain): HTMLElement {
+  private row(text: string, index: number, on: boolean, grain: Grain, author: string | null): HTMLElement {
     const row = document.createElement('div');
     row.className = `row grain-${grain}${on ? ' on' : ''}`;
+    this.markAuthor(row, author);
     const dot = document.createElement('span');
     dot.className = 'dot';
     const area = document.createElement('textarea');
@@ -177,6 +193,93 @@ export class AltPanel {
     row.append(dot, area);
     queueMicrotask(() => autosize(area));
     return row;
+  }
+
+  /** Machine rows are blue and say so in words, so colour is never the only cue. */
+  private markAuthor(row: HTMLElement, author: string | null): void {
+    row.classList.toggle('machine', author !== null);
+    const label = author === 'machine' ? 'suggested' : author === 'machine-edited' ? 'suggested, edited by you' : '';
+    if (label) row.dataset.by = label;
+    else delete row.dataset.by;
+  }
+
+  private renderAsk(message: string): void {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'ask-btn';
+    button.textContent = this.busy ? 'asking…' : '✦ suggest 3';
+    button.disabled = this.busy;
+    button.title = 'Ask for three other ways to say this. They go under yours; your text stays until you pick one.';
+    button.onclick = () => void this.suggest();
+    const note = document.createElement('p');
+    note.className = 'ask-note';
+    note.textContent = message;
+    this.ask.replaceChildren(button, note);
+  }
+
+  private askForCode(message: string): void {
+    const form = document.createElement('form');
+    form.className = 'ask-code';
+    const input = document.createElement('input');
+    input.type = 'password';
+    input.placeholder = 'access code';
+    input.setAttribute('aria-label', 'Access code for suggestions');
+    const go = document.createElement('button');
+    go.type = 'submit';
+    go.textContent = 'ok';
+    form.append(input, go);
+    form.onsubmit = (e) => {
+      e.preventDefault();
+      setAccessCode(input.value.trim());
+      this.renderAsk('');
+      void this.suggest();
+    };
+    const note = document.createElement('p');
+    note.className = 'ask-note';
+    note.textContent = message;
+    this.ask.replaceChildren(form, note);
+    input.focus();
+  }
+
+  /** Ask the server for three alternatives and add them, unshown, under the writer's text. */
+  async suggest(): Promise<void> {
+    if (this.busy || this.ask.hidden || !this.isOpen) return;
+    if (!accessCode()) return this.askForCode('Suggestions on this site need the access code.');
+    const view = this.view();
+    const grain = this.grain();
+    const { from, to } = this.groupId ? findGroup(view.state.doc, this.groupId)! : this.target!;
+    const text = view.state.doc.textBetween(from, to, ' ');
+    const { before, after } = contextAround(view.state.doc, from, to);
+    this.busy = true;
+    this.renderAsk('');
+    const result = await requestSuggestions(text, grain, before, after);
+    this.busy = false;
+    if (!result.ok) {
+      if (result.status === 401) {
+        setAccessCode('');
+        return this.askForCode(result.error);
+      }
+      return this.renderAsk(result.error);
+    }
+    if (!this.isOpen) return this.renderAsk('');
+    const now = this.view();
+    const where = this.groupId ?? this.target;
+    if (!where) return this.renderAsk('');
+    // Focus must not land on a row: focusing a row flips to it, and a
+    // suggestion must never reach the page without the writer's choice.
+    if (this.rows.contains(document.activeElement)) (document.activeElement as HTMLElement).blur();
+    let made: string | null = null;
+    const added = addMachineVariants(where, result.alternatives)(now.state, (tr) => {
+      made = tr.getMeta('altCreated') as string;
+      now.dispatch(tr);
+    });
+    if (made) {
+      this.groupId = made;
+      this.target = null;
+      this.render(false);
+    }
+    this.renderAsk(added ? 'Added in blue under yours. Flip to try one; yours stays until you do.' : 'Nothing new came back.');
+    this.ask.querySelector('button')?.focus();
   }
 
   private onFocusRow(index: number): void {

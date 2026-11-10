@@ -222,3 +222,41 @@ The code-review step ran two reviewers side by side: one against the repo's stan
 **Kept on purpose (revisions of earlier answers)**
 - Q21 revision: Use puts the item in as a new paragraph after the paragraph holding the page caret, not at the caret. Dropping a paragraph into the middle of a sentence was never what a writer wanted in testing, and a paragraph keeps any paragraph group it carries. Drag-and-drop is there for exact placement.
 - Small scope beyond the tickets, each cheap and each in service of the spec: Markdown input rules (`# ` for headings, `**bold**`, `*italic*`), a New button, a replay speed control on the timeline, `/healthz` and two safety headers (nosniff, no-referrer) in the server for Railway; the server also survives a malformed URL instead of crashing.
+
+## Round 6: deploy (2026-11-10)
+
+- **Where it lives:** https://write-on.up.railway.app, Railway project `write-on` in tp53's personal workspace, service `write-on`. tp53 chose the subdomain.
+- **How it got there:** a fresh shallow clone of the branch on tp53's laptop, `railway whoami` checked against their account first, tests and build run before upload. Their own checkout (with an uncommitted `.gitignore` and local video files) was never touched or uploaded. Claude Code's safety check on the laptop refused the production upload, so tp53 ran `railway add` / `railway up` / `railway domain` themselves. No environment variables are needed: Railway sets `PORT`, and Phase 0 has no secrets.
+- **Next:** connect the GitHub repo (branch `main`) in the Railway project's settings so every merge deploys itself.
+
+## Round 7: machine variants with Gemini (2026-11-10)
+
+### Q31. tp53 offered their Gemini key "for rephrasing and similar functionality". What do we build first?
+- **Options:** persona review (#16) first; the Lab (marks and trims); plain "other ways to say this" on the panel.
+- **Answer:** plain other ways to say this, three at a time, on any word, sentence or paragraph. It is the smallest piece of Phase 1, it is exactly what Fried's original does with AI, and personas (#16) reuse the same pipe (server endpoint, machine variants, authorship) with a different prompt.
+- **Why:** proves the end-to-end path (key on the server, guard, labelling, authorship in the file and log) on the simplest prompt before adding voices.
+
+### Q32. How do machine words stay distinguishable from the writer's?
+- **Answer:** they are variants, never active on arrival, electric blue, labelled in words, with their author recorded per variant and carried into the event log and Overflow. Details and alternatives in ADR-0007.
+- **Found while building:** after suggestions arrived the panel restored focus to the row now holding the first suggestion, and focusing a row flips to it, which put machine words on the page without the writer choosing. Fixed (focus moves to the suggest button) and covered by a browser test that fails without the fix.
+
+### Q33. How is a public URL kept from spending the key?
+- **Answer:** an access code the server checks, plus per-caller and daily caps. Off by default. See ADR-0007.
+
+## Round 8: first visit (2026-11-10)
+
+tp53 on the live app: "this is too minimal... new users including me are at a loss as to what to do with this", and asked for the explainer video on the landing screen when it is ready.
+
+### Q34. Keep Fried's opening in read mode?
+- **Before:** the app opened in read mode (Q5), with every tool hidden and the only guidance in the sample text.
+- **Now:** a first visit opens a welcome card, and closing it brings the tools in. Returning visitors still open in read mode, as Fried's does, and read mode now says beside the word count how to get the tools back. A `?` button is always visible.
+- **Why:** read mode works for someone who already knows what's hidden. A newcomer sees a static page with no affordances. That was tp53's experience, and they know the product better than anyone.
+
+### Q35. What does onboarding look like?
+- **Options:** a static help page, a video only, tooltips on everything, or a guided tour that waits for the writer to act.
+- **Answer:** a welcome card covering what it is in two sentences, the three ideas (Alternatives, Ghost, Overflow) each with its key, and the video when it exists. Then an optional one-minute tour of five steps: flip, make an alternative, ghost, stash, timeline. Each step waits for the writer to actually do it, ticks green, and moves on. It can be skipped at any point.
+- **Why:** you learn an editor by using it. The tour does nothing for you; it only tells you where to look. That is the same stance the product takes toward writing.
+- **Also:** the main actions (Alternatives, Suggest, Ghost, Stash) are now visible buttons in the bottom bar, not only shortcuts. They keep the page selection when pressed. On phones they are hidden for now.
+
+### Q36. Where does the explainer video go?
+- **Answer:** the welcome card shows `/explainer.mp4` when that file exists (put it in `public/explainer.mp4`) and shows nothing when it doesn't, so the slot is ready before the video. The video is our own explainer, not Fried's footage, so it may live in the public repo.

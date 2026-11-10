@@ -1,5 +1,5 @@
 import type { EditorView } from 'prosemirror-view';
-import { allGroupIds, findGroup, type GroupLocation } from '../core/groups';
+import { allGroupIds, authorsOf, findGroup, type GroupLocation } from '../core/groups';
 import { overflowStart } from '../core/piece';
 
 const SVG = 'http://www.w3.org/2000/svg';
@@ -45,8 +45,11 @@ function el<K extends keyof SVGElementTagNameMap>(name: K, attrs: Record<string,
 function dots(svg: SVGSVGElement, loc: GroupLocation, cx: number, cy: number, dir: 'row' | 'column'): void {
   const n = loc.attrs.variants.length;
   const gap = 8;
-  const color = COLOR[loc.attrs.grain];
+  const grainColor = COLOR[loc.attrs.grain];
+  const authors = authorsOf(loc.attrs);
   for (let i = 0; i < n; i++) {
+    // A machine suggestion's dot is electric blue, so its origin is visible on the page too.
+    const color = authors[i] ? 'var(--machine)' : grainColor;
     const offset = dir === 'row' ? (i - (n - 1) / 2) * gap : i * gap;
     const on = i === loc.attrs.active;
     svg.append(

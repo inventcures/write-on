@@ -15,7 +15,15 @@ export interface GroupAttrs {
   grain: Grain;
   variants: VariantContent[];
   active: number;
+  /**
+   * Who wrote each variant, index for index: null is the writer, 'machine' a
+   * machine suggestion, 'machine-edited' one the writer has since changed.
+   * Missing on groups with only the writer's text (ADR-0007).
+   */
+  authors?: Author[] | null;
 }
+
+export type Author = null | 'machine' | 'machine-edited';
 
 const blockAlt = { alt: { default: null as GroupAttrs | null } };
 
@@ -50,7 +58,7 @@ const marks: Record<string, MarkSpec> = {
   // A word or sentence alternative group. Non-inclusive, so typing right after
   // a group doesn't extend it; excludes itself, so groups never nest.
   alt: {
-    attrs: { id: {}, grain: {}, variants: {}, active: {} },
+    attrs: { id: {}, grain: {}, variants: {}, active: {}, authors: { default: null } },
     inclusive: false,
     excludes: 'alt',
     toDOM: (mark) => ['span', { class: `alt alt-${mark.attrs.grain}`, 'data-alt': mark.attrs.id }, 0],

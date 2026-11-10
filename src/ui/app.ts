@@ -22,6 +22,8 @@ import { explode } from './explode';
 import * as files from './files';
 import { Keybindings, keybindingsEditor, pretty, type ActionId } from './keys';
 import { colourKey } from './colours';
+import { hasBeenWelcomed, Onboarding, type TourSignal } from './onboarding';
+import { suggestionsEnabled } from './suggestions';
 import { closeMenu, closeSheet, isSheetOpen, notify, showMenu, showSheet } from './menus';
 import { drawMarks, groupRect } from './overlay';
 import { isMuted, setMuted, tick } from './sound';
@@ -75,6 +77,10 @@ export function startApp(root: HTMLElement): void {
 
   const keys = new Keybindings();
   const titled: [HTMLElement, ActionId, string][] = [];
+  const tour = (b: HTMLButtonElement, name: string) => {
+    b.dataset.tour = name;
+    return b;
+  };
   const button = (label: string, title: string, onClick: () => void, cls = 'tool', action?: ActionId) => {
     const b = document.createElement('button');
     b.type = 'button';
@@ -99,6 +105,7 @@ export function startApp(root: HTMLElement): void {
     soundBtn.textContent = isMuted() ? '♪̸' : '♪';
   });
   const keysBtn = button('⌨', 'Shortcuts and colours: change your keys here', () => showShortcuts());
+  const helpBtn = button('?', 'Welcome and tour: what this is and how to use it', () => onboarding.showWelcome(), 'help');
   const top = document.createElement('header');
   top.className = 'chrome top';
   const center = document.createElement('div');
@@ -106,7 +113,7 @@ export function startApp(root: HTMLElement): void {
   center.append(marksToggle, sourceBtn);
   const right = document.createElement('div');
   right.className = 'group';
-  right.append(soundBtn, keysBtn);
+  right.append(soundBtn, keysBtn, helpBtn);
   top.append(count, center, right);
 
   const bottom = document.createElement('footer');
@@ -118,13 +125,33 @@ export function startApp(root: HTMLElement): void {
     button('Open', 'Open', () => void openFile(), 'tool', 'open'),
     button('New', 'New piece', () => newPiece()),
     button('Export', 'Export clean Markdown: no ghosts, no Overflow', () => exportClean()),
-    button('Timeline', 'Timeline: replay and revisit every moment', () => openTimeline(), 'tool', 'timeline'),
+    tour(button('Timeline', 'Timeline: replay and revisit every moment', () => openTimeline(), 'tool', 'timeline'), 'timeline'),
     button('Log', 'Export the event log of your choices', () => void exportLog()),
   );
+  // The editing actions, as buttons too, so they can be found without knowing a
+  // shortcut. Pressing one must not take the selection away from the page.
+  const actions = document.createElement('div');
+  actions.className = 'group actions';
+  const suggestBtn = tour(button('✦ Suggest', 'Suggest 3 alternatives (machine, shown in blue)', () => suggestNow(), 'tool act machine-act', 'suggest'), 'suggest');
+  suggestBtn.hidden = true;
+  void suggestionsEnabled().then((on) => (suggestBtn.hidden = !on));
+  actions.append(
+    tour(button('Alternatives', 'Alternatives for the word at the caret, or the selected sentence or paragraph', () => openAlternatives(), 'tool act', 'alternatives'), 'alternatives'),
+    suggestBtn,
+    tour(button('Ghost', 'Ghost it / revive it', () => ghost(), 'tool act', 'ghost'), 'ghost'),
+    tour(button('Stash', 'Stash the selection in Overflow', () => doStash(), 'tool act', 'stash'), 'stash'),
+  );
+  for (const b of actions.querySelectorAll('button')) b.addEventListener('mousedown', (e) => e.preventDefault());
   const xyz = button('XYZ', 'Overflow', () => toggleOverflow(), 'tool xyz', 'overflow');
-  bottom.append(left, xyz);
+  bottom.append(left, actions, xyz);
 
   root.append(page, fadeTop, fadeBottom, top, bottom);
+  const onboarding = new Onboarding(root, {
+    showTools: () => {
+      if (body.classList.contains('read')) toggleRead();
+    },
+    focusEditor: () => view.focus(),
+  });
 
   // Editor.
   const restored = files.restore();
@@ -171,6 +198,7 @@ export function startApp(root: HTMLElement): void {
       const sel = before.selection;
       if (tr.getMeta('uiEvent') === 'drop' && !sel.empty && isInOverflow(before.doc, sel.from) && !isInOverflow(view.state.doc, view.state.selection.from))
         events.push({ kind: 'used', text: before.doc.textBetween(sel.from, sel.to, ' ') });
+      if (events.length) onboarding.signal(events.map((ev) => ev.kind));
       if (events.length) void logEvents(view.state.doc.attrs.id as string, events);
       if (tr.docChanged || before.doc !== view.state.doc) updateCount();
       requestAnimationFrame(redraw);
@@ -194,6 +222,7 @@ export function startApp(root: HTMLElement): void {
 
   function openTimeline(): void {
     if (timeline) return;
+    onboarding.signal(['timeline-opened' satisfies TourSignal]);
     panel.close();
     closeMenu();
     timeline = new Timeline({
@@ -280,6 +309,11 @@ export function startApp(root: HTMLElement): void {
       if (loc && (selection.empty || (selection.from >= loc.from && selection.to <= loc.to))) id = at;
     }
     if (!panel.openForSelection(id)) notify('Put the caret in a word, or select a sentence or paragraph, first.', 3000);
+  }
+
+  function suggestNow(): void {
+    openAlternatives();
+    void panel.suggest();
   }
 
   function ghost(): void {
@@ -418,6 +452,7 @@ export function startApp(root: HTMLElement): void {
     switch (action) {
       case 'read': toggleRead(); return true;
       case 'alternatives': openAlternatives(); return true;
+      case 'suggest': suggestNow(); return true;
       case 'overflow': toggleOverflow(); return true;
       case 'timeline': openTimeline(); return true;
       case 'source': showSource(); return true;
@@ -461,6 +496,12 @@ export function startApp(root: HTMLElement): void {
         }
         return;
       }
+      if (e.key === 'Escape' && onboarding.welcoming) {
+        e.preventDefault();
+        e.stopPropagation();
+        onboarding.closeWelcome();
+        return;
+      }
       if (e.key === 'Escape') {
         closeMenu();
         if (panel.isOpen) panel.close();
@@ -482,6 +523,7 @@ export function startApp(root: HTMLElement): void {
   setOverflowEditable();
   requestAnimationFrame(redraw);
   view.focus();
+  if (!hasBeenWelcomed()) onboarding.showWelcome();
   // Exposed for end-to-end tests and the curious.
   (window as unknown as { writeOn: unknown }).writeOn = { view, toPieceFile: () => toPieceFile(view.state.doc) };
 }
