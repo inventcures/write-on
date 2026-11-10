@@ -117,7 +117,7 @@ Mark hedges and filler
 
 Choosing a trim shows a card ("Slight trim · Reading…"), a crimson scan line sweeps down each paragraph, and then the words that would go fade to about 22%. The card reads "535 → 480 words · −10%" and "Faded words would go. Click one to keep it." Clicking a faded passage keeps it. Switching levels is instant because one AI read serves all four. In the clips only the first two levels are shown.
 
-This matters for our thesis: **Fried's own AI already obeys "point, don't fix"**. It marks, fades and deletes; it never writes new sentences into your piece, except the alternatives you explicitly ask for with `??`.
+**If the replica's reading holds, Fried's own AI already obeys "point, don't fix".** It marks, fades and deletes, and it never writes new sentences into your piece except the alternatives you explicitly ask for with `??`. Treat this as secondhand for now: the replica's spec says it observed the Lab popover, the trim card and `??` in the clips, but nobody has published frames we can check, the research survey found the AI role disputed between the two clones, and Fried's post text never mentions AI features. Whether these AI features are in the original is the first thing we'll check against our own frames \[VIDEO pending\].
 
 ### The file format \[CLIPS, from the 0:52 reply\]
 
