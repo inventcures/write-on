@@ -418,6 +418,7 @@ export function startApp(root: HTMLElement): void {
     switch (action) {
       case 'read': toggleRead(); return true;
       case 'alternatives': openAlternatives(); return true;
+      case 'suggest': openAlternatives(); void panel.suggest(); return true;
       case 'overflow': toggleOverflow(); return true;
       case 'timeline': openTimeline(); return true;
       case 'source': showSource(); return true;

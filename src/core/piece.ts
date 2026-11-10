@@ -5,7 +5,7 @@ import { schema } from './schema';
 
 /** Something the writer did that the learning layer will want to know. */
 export type EditEvent =
-  | { kind: 'variant-added'; groupId: string; grain: string; text: string }
+  | { kind: 'variant-added'; groupId: string; grain: string; text: string; by?: 'machine' }
   | { kind: 'flipped'; groupId: string; grain: string; from: number; to: number; text: string }
   | { kind: 'variant-dropped'; groupId: string; grain: string; text: string }
   | { kind: 'ghosted' | 'revived'; text: string }

@@ -4,6 +4,7 @@ import { stat } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { aiConfig, rateLimiter, suggest } from './server/suggest.mjs';
 
 const root = join(fileURLToPath(new URL('.', import.meta.url)), 'dist');
 const port = Number(process.env.PORT) || 4173;
@@ -19,10 +20,48 @@ const types = {
   '.png': 'image/png',
 };
 
+const limit = rateLimiter();
+const json = (res, status, body) =>
+  res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }).end(JSON.stringify(body));
+
+function readBody(req, max = 20_000) {
+  return new Promise((resolve) => {
+    let size = 0;
+    const chunks = [];
+    req.on('data', (c) => {
+      size += c.length;
+      if (size > max) {
+        resolve(null);
+        req.destroy();
+      } else chunks.push(c);
+    });
+    req.on('end', () => {
+      try {
+        resolve(JSON.parse(Buffer.concat(chunks).toString('utf8')));
+      } catch {
+        resolve(null);
+      }
+    });
+    req.on('error', () => resolve(null));
+  });
+}
+
 createServer(async (req, res) => {
   const url = new URL(req.url ?? '/', 'http://localhost');
   if (url.pathname === '/healthz') {
     res.writeHead(200, { 'content-type': 'text/plain' }).end('ok');
+    return;
+  }
+  if (url.pathname === '/api/ai') {
+    json(res, 200, { enabled: aiConfig(process.env).enabled });
+    return;
+  }
+  if (url.pathname === '/api/suggest') {
+    if (req.method !== 'POST') return json(res, 405, { error: 'POST only' });
+    const input = await readBody(req);
+    const ip = String(req.headers['x-real-ip'] ?? req.headers['x-forwarded-for'] ?? req.socket.remoteAddress ?? '').split(',')[0].trim();
+    const out = await suggest(input, req.headers, { env: process.env, fetch, ip, now: Date.now(), limit });
+    json(res, out.status, out.body);
     return;
   }
   let path = '/';

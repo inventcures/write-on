@@ -1,7 +1,9 @@
 import { closeHistory, undo } from 'prosemirror-history';
 import { describe, expect, it } from 'vitest';
 import {
+  addMachineVariants,
   addVariant,
+  authorsOf,
   createGroup,
   deleteActiveVariant,
   findGroup,
@@ -228,5 +230,77 @@ describe('outside edits, more precisely', () => {
     state = run(state, toggleGhost);
     const { notice } = fromPieceFile(toPieceFile(state.doc).replace('Maybe cut this.', 'Maybe cut that.'));
     expect(notice).toMatch(/1 ghosted passage was changed/);
+  });
+});
+
+describe('machine variants (ADR-0007)', () => {
+  it('arrive as extra variants without changing the page', () => {
+    let state = select(piece(text), 'thumbtack');
+    state = run(state, addMachineVariants(targetForSelection(state)!, ['nail', 'pin']));
+    expect(pageText(state)).toContain('thumbtack');
+    const id = groupAt(state.doc, find(state, 'thumbtack')[0])!;
+    const loc = findGroup(state.doc, id)!;
+    expect(loc.attrs.variants.map(variantText)).toEqual(['thumbtack', 'nail', 'pin']);
+    expect(loc.attrs.active).toBe(0);
+    expect(authorsOf(loc.attrs)).toEqual([null, 'machine', 'machine']);
+  });
+
+  it('show only when the writer flips to one', () => {
+    let state = select(piece(text), 'thumbtack');
+    state = run(state, addMachineVariants(targetForSelection(state)!, ['nail']));
+    const id = groupAt(state.doc, find(state, 'thumbtack')[0])!;
+    state = run(state, flip(id, 1));
+    expect(pageText(state)).toContain('like a nail');
+  });
+
+  it('join an existing group and skip repeats', () => {
+    const { state: s0, id } = wordGroup('thumbtack', 'nail');
+    const state = run(s0, addMachineVariants(id, ['nail', 'tack', ' tack ']));
+    const loc = findGroup(state.doc, id)!;
+    expect(loc.attrs.variants.map(variantText)).toEqual(['thumbtack', 'nail', 'tack']);
+    expect(authorsOf(loc.attrs)).toEqual([null, null, 'machine']);
+    expect(variantText(loc.attrs.variants[loc.attrs.active])).toBe('nail');
+  });
+
+  it('become "machine-edited" once the writer changes one, and keep their label through delete', () => {
+    let state = select(piece(text), 'thumbtack');
+    state = run(state, addMachineVariants(targetForSelection(state)!, ['nail', 'pin']));
+    const id = groupAt(state.doc, find(state, 'thumbtack')[0])!;
+    state = run(state, setVariantText(id, 1, 'rusty nail'));
+    expect(authorsOf(findGroup(state.doc, id)!.attrs)).toEqual([null, 'machine-edited', 'machine']);
+    state = run(state, flipTo(id, 1));
+    state = run(state, deleteActiveVariant(id));
+    expect(authorsOf(findGroup(state.doc, id)!.attrs)).toEqual([null, 'machine']);
+  });
+
+  it('can be undone in one step', () => {
+    let state = select(piece(text), 'thumbtack');
+    state = run(state, addMachineVariants(targetForSelection(state)!, ['nail']));
+    state = run(state, undo);
+    expect(groupAt(state.doc, find(state, 'thumbtack')[0])).toBeNull();
+  });
+
+  it('work on a paragraph and survive saving', () => {
+    let state = select(piece(text), text);
+    state = run(state, addMachineVariants(targetForSelection(state)!, ['Fix it to the wall. Isn’t it obvious?']));
+    expect(pageText(state)).toContain('thumbtack');
+    const back = fromPieceFile(toPieceFile(state.doc)).doc;
+    const id = groupAt(back, 2)!;
+    expect(authorsOf(findGroup(back, id)!.attrs)).toEqual([null, 'machine']);
+  });
+
+  it('keep their label when they go to Overflow', () => {
+    let state = select(piece(text), 'thumbtack');
+    state = run(state, addMachineVariants(targetForSelection(state)!, ['nail']));
+    state = select(state, 'Pin it like a thumbtack to the wall.');
+    state = run(state, createGroup(targetForSelection(state)!, textVariant('Fix it to the wall.')));
+    expect(overflowText(state)).toContain('from “thumbtack” (suggested): nail');
+  });
+
+  it('are logged as the machine\'s', () => {
+    const state = select(piece(text), 'thumbtack');
+    let events: unknown[] = [];
+    addMachineVariants(targetForSelection(state)!, ['nail'])(state, (tr) => (events = eventsOf(tr)));
+    expect(events).toEqual([expect.objectContaining({ kind: 'variant-added', text: 'nail', by: 'machine' })]);
   });
 });

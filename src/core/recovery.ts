@@ -2,7 +2,7 @@ import type { Node } from 'prosemirror-model';
 import { isHistoryTransaction } from 'prosemirror-history';
 import { Plugin } from 'prosemirror-state';
 import { Transform } from 'prosemirror-transform';
-import { allGroupIds, findGroup, variantText, type GroupLocation } from './groups';
+import { allGroupIds, authorsOf, findGroup, variantText, type GroupLocation } from './groups';
 import { appendToOverflow } from './overflow';
 import { overflowStart } from './piece';
 import { schema } from './schema';
@@ -10,9 +10,10 @@ import { schema } from './schema';
 /** Overflow notes for a group's variants that aren't showing. */
 function notesFor(loc: GroupLocation): string[] {
   const showing = variantText(loc.attrs.variants[loc.attrs.active]);
+  const authors = authorsOf(loc.attrs);
   return loc.attrs.variants
-    .filter((_, i) => i !== loc.attrs.active)
-    .map((v) => `from “${showing}”: ${variantText(v)}`)
+    .map((v, i) => (i === loc.attrs.active ? '' : `from “${showing}”${authors[i] ? ' (suggested)' : ''}: ${variantText(v)}`))
+    .filter((note) => note !== '')
     .filter((note) => !note.endsWith(': '));
 }
 

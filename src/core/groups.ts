@@ -2,7 +2,7 @@ import { Fragment, type Mark, type Node } from 'prosemirror-model';
 import type { Command, EditorState, Transaction } from 'prosemirror-state';
 import { appendToOverflow } from './overflow';
 import { addEvents, isInOverflow, newId } from './piece';
-import { schema, type Grain, type GroupAttrs, type VariantContent } from './schema';
+import { schema, type Author, type Grain, type GroupAttrs, type VariantContent } from './schema';
 import { articleFix, sentenceRanges, trimRange, wordAt } from './text';
 
 /** Where an alternative group sits in the document right now. */
@@ -50,6 +50,17 @@ export function variantText(content: VariantContent): string {
   let text = '';
   Fragment.fromJSON(schema, content).forEach((n) => (text += n.textContent));
   return text;
+}
+
+/** Who wrote each variant of a group; the writer unless recorded otherwise. */
+export function authorsOf(attrs: GroupAttrs): Author[] {
+  return attrs.variants.map((_, i) => attrs.authors?.[i] ?? null);
+}
+
+/** Store authors only when some variant isn't the writer's, so plain groups stay plain. */
+function withAuthors(attrs: GroupAttrs, authors: Author[]): GroupAttrs {
+  const { authors: _old, ...rest } = attrs;
+  return authors.some((a) => a !== null) ? { ...rest, authors } : rest;
 }
 
 export function textVariant(text: string): VariantContent {
@@ -169,8 +180,9 @@ function flattenInlineGroups(tr: Transaction, from: number, to: number): void {
     const loc = findGroup(tr.doc, id);
     if (!loc) return;
     const showing = variantText(loc.attrs.variants[loc.attrs.active]);
+    const authors = authorsOf(loc.attrs);
     loc.attrs.variants.forEach((v, i) => {
-      if (i !== loc.attrs.active) notes.push(`from “${showing}”: ${variantText(v)}`);
+      if (i !== loc.attrs.active) notes.push(`from “${showing}”${authors[i] ? ' (suggested)' : ''}: ${variantText(v)}`);
     });
   });
   if (seen.size === 0) return;
@@ -233,7 +245,8 @@ export function addVariant(id: string, content: VariantContent): Command {
     if (!dispatch) return true;
     const variants = [...loc.attrs.variants, content];
     const tr = state.tr;
-    writeGroup(tr, loc, { ...loc.attrs, variants, active: variants.length - 1 }, content);
+    const attrs = withAuthors({ ...loc.attrs, variants, active: variants.length - 1 }, [...authorsOf(loc.attrs), null]);
+    writeGroup(tr, loc, attrs, content);
     addEvents(tr, [{ kind: 'variant-added', groupId: id, grain: loc.attrs.grain, text: variantText(content) }]);
     dispatch(tr);
     return true;
@@ -250,8 +263,10 @@ export function setVariantText(id: string, index: number, text: string): Command
     if (!dispatch) return true;
     const variants = loc.attrs.variants.slice();
     variants[index] = textVariant(text);
+    const authors = authorsOf(loc.attrs);
+    if (authors[index] === 'machine') authors[index] = 'machine-edited';
     const tr = state.tr;
-    writeGroup(tr, loc, { ...loc.attrs, variants }, isActive ? variants[index] : null);
+    writeGroup(tr, loc, withAuthors({ ...loc.attrs, variants }, authors), isActive ? variants[index] : null);
     dispatch(tr);
     return true;
   };
@@ -322,10 +337,61 @@ export function deleteActiveVariant(id: string): Command {
       }
     } else {
       const next = Math.min(active, rest.length - 1);
-      writeGroup(tr, loc, { ...loc.attrs, variants: rest, active: next }, rest[next]);
+      const authors = authorsOf(loc.attrs).filter((_, i) => i !== active);
+      writeGroup(tr, loc, withAuthors({ ...loc.attrs, variants: rest, active: next }, authors), rest[next]);
     }
     addEvents(tr, [{ kind: 'variant-dropped', groupId: id, grain, text: variantText(removed) }]);
     dispatch(tr.setMeta('altDeleted', id));
+    return true;
+  };
+}
+
+/**
+ * Add machine suggestions as extra variants, labelled as the machine's and
+ * never shown: the writer's text stays on the page until they flip
+ * (ADR-0005, ADR-0006, ADR-0007). On a target with no group yet, a group is
+ * made around the writer's text first. Suggestions that repeat a variant are
+ * skipped. Undoable as one step.
+ */
+export function addMachineVariants(where: string | GroupTarget, texts: string[]): Command {
+  return (state, dispatch) => {
+    const tr = state.tr;
+    let id: string;
+    if (typeof where === 'string') id = where;
+    else {
+      id = newId();
+      const target = where;
+      if (target.grain === 'paragraph') {
+        const $pos = state.doc.resolve(target.from);
+        const attrs: GroupAttrs = { id, grain: 'paragraph', variants: [contentOf(state.doc, $pos.start(), $pos.end())], active: 0 };
+        tr.setNodeMarkup($pos.before(), undefined, { ...$pos.parent.attrs, alt: attrs });
+      } else {
+        const [from, to] = widenOverGroups(state.doc, target.from, target.to);
+        flattenInlineGroups(tr, from, to);
+        const attrs: GroupAttrs = { id, grain: target.grain, variants: [contentOf(tr.doc, from, to)], active: 0 };
+        tr.removeMark(from, to, altType).addMark(from, to, altType.create(attrs));
+      }
+    }
+    const loc = findGroup(tr.doc, id);
+    if (!loc) return false;
+    const known = new Set(loc.attrs.variants.map((v) => variantText(v).trim()));
+    const fresh: string[] = [];
+    for (const raw of texts) {
+      const t = raw.replace(/\s+/g, ' ').trim();
+      if (!t || known.has(t)) continue;
+      known.add(t);
+      fresh.push(t);
+    }
+    if (fresh.length === 0) return false;
+    if (!dispatch) return true;
+    const variants = [...loc.attrs.variants, ...fresh.map(textVariant)];
+    const authors: Author[] = [...authorsOf(loc.attrs), ...fresh.map((): Author => 'machine')];
+    writeGroup(tr, loc, withAuthors({ ...loc.attrs, variants }, authors), null);
+    addEvents(
+      tr,
+      fresh.map((text) => ({ kind: 'variant-added' as const, groupId: id, grain: loc.attrs.grain, text, by: 'machine' as const })),
+    );
+    dispatch(tr.setMeta('altCreated', id).setMeta('altDeleted', true));
     return true;
   };
 }

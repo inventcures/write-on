@@ -38,6 +38,10 @@ _Avoid_: Selected, current version
 Changing which variant is active. A flip is not an edit and is never an undo step.
 _Avoid_: Switch, swap, toggle
 
+**Machine variant**:
+A variant the model proposed (Phase 1, ADR-0007). It joins a group without becoming active, is drawn in electric blue and labelled "suggested" in the panel; once the writer edits it, it is "suggested, edited by you". Its author is recorded with the group.
+_Avoid_: Suggestion (a Nudge is not one either), AI text, completion
+
 **Original**:
 The variant that was active when the writer began flipping a group; landing back on it plays the lower tick.
 _Avoid_: First variant, default

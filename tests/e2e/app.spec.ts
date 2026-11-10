@@ -103,3 +103,40 @@ test('rebinds a shortcut in the shortcuts sheet', async ({ page }) => {
   await page.keyboard.press('Control+g');
   await expect(page.locator('.ghost')).toHaveCount(before + 1);
 });
+
+test('suggestions arrive in blue under the writer\'s word, behind the access code', async ({ page }) => {
+  let asked: { text?: string; grain?: string; code?: string } = {};
+  let calls = 0;
+  await page.route('**/api/ai', (r) => r.fulfill({ json: { enabled: true } }));
+  await page.route('**/api/suggest', async (r) => {
+    asked = { ...r.request().postDataJSON(), code: r.request().headers()['x-write-on-code'] };
+    if (asked.code !== 'sesame') return r.fulfill({ status: 401, json: { error: 'That access code isn’t right.' } });
+    calls++;
+    return r.fulfill({ json: { alternatives: calls === 1 ? ['effort', 'attempt', 'go'] : ['stab', 'shot'] } });
+  });
+  await page.reload();
+  await page.keyboard.press('Control+Shift+R');
+  await page.getByText('first try away', { exact: false }).click();
+  await page.keyboard.press('Control+Shift+G');
+  const panel = page.locator('.alt-panel');
+  await panel.getByLabel('Access code for suggestions').fill('sesame');
+  await panel.getByRole('button', { name: 'ok' }).click();
+  await expect(panel.locator('.row.machine')).toHaveCount(3);
+  expect(asked.grain).toBe('word');
+  // Asking again from the button, with the code remembered and the caret in a row,
+  // still leaves the writer's word on the page.
+  await panel.locator('.row textarea').last().focus();
+  await page.keyboard.press('Control+Shift+G');
+  await expect(panel.locator('.row.machine')).toHaveCount(5);
+  await expect(panel.locator('.row.on')).not.toHaveClass(/machine/);
+  await expect(panel.locator('.row.machine').first()).toHaveAttribute('data-by', 'suggested');
+  // The page still shows the writer's own word.
+  const file = await pieceFile(page);
+  expect(file).toContain('"authors"');
+  await page.keyboard.press('Escape');
+  const pageText = page.locator('.ProseMirror > :not(aside)');
+  await expect(pageText.first()).toBeVisible();
+  const shown = (await pageText.allTextContents()).join(' ');
+  expect(shown).toContain(String(asked.text));
+  expect(shown).not.toMatch(/\b(effort|attempt|stab|shot)\b/);
+});

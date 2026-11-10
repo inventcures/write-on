@@ -4,7 +4,7 @@ An editor for thinking on the page. Any word, sentence or paragraph can hold qui
 
 It reproduces the workbench of Jason Fried's [Write_On](https://x.com/jasonfried/status/2105403067793584590) (alternative control, not version control) as Phase 0 of a writing thought partner that will learn your style and nudge, but never write for you.
 
-**Try it: https://write-on.up.railway.app** (everything stays in your browser; nothing is sent anywhere).
+**Try it: https://write-on.up.railway.app** (your writing stays in your browser; only a passage you ask suggestions for is sent, to the server and on to Gemini).
 
 ## Use it
 
@@ -12,6 +12,7 @@ It reproduces the workbench of Jason Fried's [Write_On](https://x.com/jasonfried
 | --- | --- |
 | Tools in or out (it opens in read mode) | Ctrl+Shift+R, or click the word count |
 | Alternatives for the word at the caret, or the selected sentence or paragraph | Ctrl+Shift+A |
+| Suggest 3 more, from the machine (in blue; yours stays until you flip) | Ctrl+Shift+G, or ✦ in the panel |
 | Flip alternatives | hover and ← →, or Ctrl+[ / Ctrl+] |
 | Ghost it / revive it | Ctrl+/ |
 | Stash in Overflow / open Overflow / use from Overflow | Ctrl+Shift+X / Ctrl+Shift+D / Ctrl+Return |
@@ -37,3 +38,15 @@ Deployed on Railway (project `write-on`, https://write-on.up.railway.app) from t
 ## Credits
 
 The idea and interaction design are Jason Fried's; this is an independent reproduction built from his public demo. Not affiliated with 37signals.
+
+## Machine suggestions (optional)
+
+Off unless the server has both variables set (ADR-0007):
+
+| Variable | What |
+| --- | --- |
+| `GEMINI_API_KEY` | Google AI Studio key. Server-side only; never reaches the page. |
+| `WRITE_ON_ACCESS_CODE` | A phrase you choose. The page asks for it once, so strangers can't spend your key. |
+| `GEMINI_MODEL` | Optional, default `gemini-2.5-flash`. |
+
+Limits: 30 requests an hour per caller, 500 a day in all.

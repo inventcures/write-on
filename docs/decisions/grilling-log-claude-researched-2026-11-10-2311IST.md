@@ -228,3 +228,17 @@ The code-review step ran two reviewers side by side: one against the repo's stan
 - **Where it lives:** https://write-on.up.railway.app, Railway project `write-on` in tp53's personal workspace, service `write-on`. tp53 chose the subdomain.
 - **How it got there:** a fresh shallow clone of the branch on tp53's laptop, `railway whoami` checked against their account first, tests and build run before upload. Their own checkout (with an uncommitted `.gitignore` and local video files) was never touched or uploaded. Claude Code's safety check on the laptop refused the production upload, so tp53 ran `railway add` / `railway up` / `railway domain` themselves. No environment variables are needed: Railway sets `PORT`, and Phase 0 has no secrets.
 - **Next:** connect the GitHub repo (branch `main`) in the Railway project's settings so every merge deploys itself.
+
+## Round 7: machine variants with Gemini (2026-11-10)
+
+### Q31. tp53 offered their Gemini key "for rephrasing and similar functionality". What do we build first?
+- **Options:** persona review (#16) first; the Lab (marks and trims); plain "other ways to say this" on the panel.
+- **Answer:** plain other ways to say this, three at a time, on any word, sentence or paragraph. It is the smallest piece of Phase 1, it is exactly what Fried's original does with AI, and personas (#16) reuse the same pipe (server endpoint, machine variants, authorship) with a different prompt.
+- **Why:** proves the end-to-end path (key on the server, guard, labelling, authorship in the file and log) on the simplest prompt before adding voices.
+
+### Q32. How do machine words stay distinguishable from the writer's?
+- **Answer:** they are variants, never active on arrival, electric blue, labelled in words, with their author recorded per variant and carried into the event log and Overflow. Details and alternatives in ADR-0007.
+- **Found while building:** after suggestions arrived the panel restored focus to the row now holding the first suggestion, and focusing a row flips to it, which put machine words on the page without the writer choosing. Fixed (focus moves to the suggest button) and covered by a browser test that fails without the fix.
+
+### Q33. How is a public URL kept from spending the key?
+- **Answer:** an access code the server checks, plus per-caller and daily caps. Off by default. See ADR-0007.
