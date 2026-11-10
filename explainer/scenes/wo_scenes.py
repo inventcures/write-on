@@ -732,12 +732,14 @@ class Scene99MakerIntro(TimedScene):
 
         trace.add_updater(draw)
         self.add(trace)
+        self.keep = (trace,)
 
         # Hi, date, Fable 5.2
         self.at("i.hi")
         who = VGroup(label("a note from Ashish, who built write-on", size=24, color=INK_SOFT),
                      label("in their own voice", size=20, color=SENT)).arrange(DOWN, buff=0.12, aligned_edge=LEFT)
         who.to_corner(UL, buff=0.5)
+        self.keep = (trace, who)
         self.play(FadeIn(who, shift=RIGHT * 0.2), run_time=0.8)
         self.at("i.date")
         date = label("10 November 2026", size=60, color=INK, weight=BOLD).shift(UP * 0.5)
@@ -758,7 +760,7 @@ class Scene99MakerIntro(TimedScene):
 
         # Writing is thinking
         self.at("i.thinking")
-        self.clear_all_but(trace, who, run_time=0.4)
+        self.clear_all_but(*self.keep, run_time=0.4)
         big = label("writing is thinking", size=72, color=INK, weight=BOLD).shift(UP * 0.8)
         self.play(FadeIn(big, scale=1.05), run_time=0.8)
         self.at("i.thinking", 0.55)
@@ -771,9 +773,18 @@ class Scene99MakerIntro(TimedScene):
 
         # Credit, and where it starts
         self.at("i.fried")
-        self.clear_all_but(trace, who, run_time=0.4)
+        self.clear_all_but(*self.keep, run_time=0.4)
         credit = label("full credit: Jason Fried's Write_On", size=44, color=INK, weight=BOLD).shift(UP * 0.9)
         self.play(FadeIn(credit, shift=UP * 0.15), run_time=0.8)
+        if "i.startpoint" in self.beat:
+            self.startpoint()
+
+        # Research, and the people who helped
+        if "i.research" in self.beat:
+            self.research()
+        self.credits_and_rest(trace, who)
+
+    def startpoint(self):
         self.at("i.startpoint")
         start = Dot(radius=0.14, fill_color=KEPT).move_to(LEFT * 4 + DOWN * 0.6)
         end = Dot(radius=0.14, fill_color=INK_FAINT).move_to(RIGHT * 4 + DOWN * 0.6)
@@ -783,9 +794,9 @@ class Scene99MakerIntro(TimedScene):
         self.play(FadeIn(start, scale=0.5), FadeIn(sl), run_time=0.6)
         self.play(ShowCreation(path), FadeIn(end), FadeIn(el), run_time=1.4)
 
-        # Research, and the people who helped
+    def research(self):
         self.at("i.research")
-        self.clear_all_but(trace, who, run_time=0.4)
+        self.clear_all_but(*self.keep, run_time=0.4)
         docs = VGroup(*[panel(1.4, 1.8, color=INK_FAINT) for _ in range(5)]).arrange(RIGHT, buff=0.3).shift(UP * 0.6)
         for d in docs:
             d.add(*[Line(LEFT * 0.45, RIGHT * 0.45).set_stroke(INK_FAINT, 2).move_to(d.get_center() + UP * (0.5 - 0.25 * k))
@@ -793,26 +804,31 @@ class Scene99MakerIntro(TimedScene):
         rl = label("deep research, again with Fable 5.2", size=34, color=INK).next_to(docs, DOWN, buff=0.5)
         self.play(LaggedStartMap(FadeIn, docs, shift=UP * 0.2, lag_ratio=0.15), FadeIn(rl), run_time=1.4)
 
+    def credits_and_rest(self, trace, who):
         self.at("i.potato")
-        self.clear_all_but(trace, who, run_time=0.4)
+        self.clear_all_but(*self.keep, run_time=0.4)
         shout = label("shout-out", size=26, color=INK_SOFT).shift(UP * 1.9)
         p = label("@poteto", size=54, color=INK, weight=BOLD).next_to(shout, DOWN, buff=0.3)
         self.play(FadeIn(shout), FadeIn(p, shift=UP * 0.15), run_time=0.8)
         self.at("i.unslop")
+        tweak = "tweaked" in self.beat["i.unslop"]["display_text"]
         chain = VGroup(self.card("pstack, a suite of skills", dot=INK_SOFT),
                        self.card("its unslop skill", dot=SENT),
                        self.card("tweaked for my own writing", dot=KEPT)).arrange(RIGHT, buff=0.6).scale(0.9)
-        chain.next_to(p, DOWN, buff=0.9).set_x(0)
+        chain.next_to(p, DOWN, buff=0.9)
+        shown = chain if tweak else VGroup(chain[0], chain[1])
+        chain.shift(LEFT * shown.get_center()[0])
         arrows = VGroup(*[Arrow(chain[k].get_right(), chain[k + 1].get_left(), buff=0.08).set_stroke(INK_FAINT, 3)
                           .set_fill(INK_FAINT) for k in range(2)])
         self.play(FadeIn(chain[0], shift=UP * 0.1), run_time=0.6)
         self.at("i.unslop", 0.45)
         self.play(GrowArrow(arrows[0]), FadeIn(chain[1], shift=UP * 0.1), run_time=0.6)
-        self.at("i.unslop", 0.7)
-        self.play(GrowArrow(arrows[1]), FadeIn(chain[2], shift=UP * 0.1), run_time=0.6)
+        if tweak:
+            self.at("i.unslop", 0.7)
+            self.play(GrowArrow(arrows[1]), FadeIn(chain[2], shift=UP * 0.1), run_time=0.6)
 
         self.at("i.voice")
-        self.clear_all_but(trace, who, run_time=0.4)
+        self.clear_all_but(*self.keep, run_time=0.4)
         v1 = label("use LLMs to write better", size=46, color=INK).shift(UP * 0.7)
         v2 = label("without losing your own voice", size=46, color=SENT, weight=BOLD).next_to(v1, DOWN, buff=0.4)
         self.play(FadeIn(v1, shift=UP * 0.15), run_time=0.7)
@@ -821,7 +837,7 @@ class Scene99MakerIntro(TimedScene):
 
         # What they read
         self.at("i.perell")
-        self.clear_all_but(trace, who, run_time=0.4)
+        self.clear_all_but(*self.keep, run_time=0.4)
         rh = label("what I've been reading", size=30, color=INK_SOFT).shift(UP * 2.2)
         self.play(FadeIn(rh), run_time=0.4)
         items = [("David Perell", "i.perell", 0.3, PARA), ("free time on Substack", "i.substack", 0.2, UND),
@@ -830,27 +846,34 @@ class Scene99MakerIntro(TimedScene):
                  ("Celine Nguyen", "i.names", 0.65, WORD)]
         spots = [LEFT * 3.6 + UP * 1.0, RIGHT * 2.6 + UP * 1.0, LEFT * 0.4 + UP * 0.05, LEFT * 4.0 + DOWN * 0.95,
                  RIGHT * 0.6 + DOWN * 0.95, LEFT * 2.6 + DOWN * 1.95, RIGHT * 2.6 + DOWN * 1.95]
-        for (text, cue, frac, col), spot in zip(items, spots):
+        present = [(it, sp) for it, sp in zip(items, spots) if it[1] in self.beat]
+        if len(present) < len(items):  # short cut: a tidy row layout for what is left
+            spots = [UP * 0.9, LEFT * 2.4 + DOWN * 0.4, RIGHT * 2.4 + DOWN * 0.4]
+            present = [(it, sp) for (it, _), sp in zip(present, spots)]
+        for (text, cue, frac, col), spot in present:
             self.at(cue, frac)
             c = self.card(text, dot=col).move_to(spot)
             self.play(FadeIn(c, shift=UP * 0.12), run_time=0.5)
 
         # Open code
         self.at("i.open")
-        self.clear_all_but(trace, who, run_time=0.4)
+        self.clear_all_but(*self.keep, run_time=0.4)
         oc = label("the code is open", size=50, color=INK, weight=BOLD).shift(UP * 1.0)
         self.play(FadeIn(oc, shift=UP * 0.15), run_time=0.7)
-        self.at("i.prs")
         pr = self.card("pull requests welcome", dot=WORD).next_to(oc, DOWN, buff=0.6)
-        self.play(FadeIn(pr, shift=UP * 0.1), run_time=0.5)
+        if "i.prs" in self.beat:
+            self.at("i.prs")
+            self.play(FadeIn(pr, shift=UP * 0.1), run_time=0.5)
+        else:
+            pr.set_opacity(0)
         self.at("i.brickbats")
         bb = VGroup(self.card("brickbats", color=REJ, dot=REJ), self.card("praise", color=KEPT, dot=KEPT))
-        bb.arrange(RIGHT, buff=0.6).next_to(pr, DOWN, buff=0.45)
+        bb.arrange(RIGHT, buff=0.6).next_to(pr if "i.prs" in self.beat else oc, DOWN, buff=0.45 if "i.prs" in self.beat else 0.6)
         wl = label("both welcome", size=26, color=INK_SOFT).next_to(bb, DOWN, buff=0.3)
         self.play(LaggedStartMap(FadeIn, bb, lag_ratio=0.3), FadeIn(wl), run_time=0.9)
 
         self.at("i.attempt")
-        self.clear_all_but(trace, who, run_time=0.3)
+        self.clear_all_but(*self.keep, run_time=0.3)
         here = page("here's my attempt.", size=54, color=KEPT)
         self.play(FadeIn(here, shift=UP * 0.15), run_time=0.7)
         self.finish()

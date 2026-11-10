@@ -41,6 +41,16 @@ CUES = ["hi", "date", "fable", "what", "partner", "thinking", "atrophy", "fried"
         "potato", "unslop", "voice", "perell", "substack", "admire", "mlhealth", "names",
         "open", "prs", "brickbats", "attempt"]
 GAP = 0.22
+import sys
+if "--short" in sys.argv:  # about 60 s: drop the weakest clips, shorten two
+    DROP = {"startpoint", "research", "substack", "admire", "mlhealth", "prs"}
+    SHORTER = {"potato": ([(89.4, 91.8, 0, 1)], "Shout-out to Poteto, @poteto,"),
+               "unslop": ([(96.0, 99.9, 1, 0)], "whose suite of skills, PStack, had a skill called unslop.")}
+    keep = [k for k, c in enumerate(CUES) if c not in DROP]
+    CLIPS, CAPTIONS, CUES = [CLIPS[k] for k in keep], [CAPTIONS[k] for k in keep], [CUES[k] for k in keep]
+    for k, c in enumerate(CUES):
+        if c in SHORTER:
+            CLIPS[k], CAPTIONS[k] = SHORTER[c]
 LEAD, TAIL = 0.4, 1.0
 
 x, r = sf.read("full_proc.wav")
