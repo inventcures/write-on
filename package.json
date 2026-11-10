@@ -6,7 +6,7 @@
   "description": "Alternative control for writing: word, sentence and paragraph alternatives, Ghost and Overflow.",
   "license": "MIT",
   "engines": {
-    "node": ">=20"
+    "node": ">=22.13"
   },
   "scripts": {
     "dev": "vite",

@@ -19,6 +19,7 @@ A pairing partner for your writing, as in [pair programming](https://martinfowle
 | Ghost it / revive it | Ctrl+/ |
 | Stash in Overflow / open Overflow / use from Overflow | Ctrl+Shift+X / Ctrl+Shift+D / Ctrl+Return |
 | Timeline | Ctrl+Shift+L |
+| Your writing: every piece and moment on one line; sign in | Ctrl+Shift+H, or the button by the word count |
 | Save / open (one Markdown file) | Ctrl+S / Ctrl+O |
 
 Every shortcut can be changed in the shortcuts sheet (the ⌨ icon), which also explains the colours: green kept, amber undecided, red rejected.
@@ -52,3 +53,7 @@ Off unless the server has both variables set (ADR-0007):
 | `GEMINI_MODEL` | Optional, default `gemini-3.8-flash`. |
 
 Limits: 30 requests an hour per caller, 500 a day in all.
+
+## Accounts (optional)
+
+Off unless the server has lasting storage (ADR-0008). On Railway, add a volume mounted at `/data` and set `DATA_DIR=/data`. Writers then sign in with email and password; each writer's pieces, timelines and event log are theirs alone. Signed out, everything stays in the browser as before.

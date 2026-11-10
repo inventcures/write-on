@@ -90,7 +90,8 @@ function quote(parts: Part[], type: Part['type'], longestOnly = false): string {
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 /** One plain sentence describing a moment, for the caption. */
-export function caption(kind: EntryKind, parts: Part[]): string {
+export function caption(kind: EntryKind, parts: Part[], by?: 'machine'): string {
+  if (by === 'machine') return 'WO suggested other ways to say this. Yours stayed on the page.';
   const added = wordsIn(parts, 'added');
   const cut = wordsIn(parts, 'cut');
   switch (kind) {
@@ -134,9 +135,9 @@ export interface MomentView {
 }
 
 /** Everything the timeline needs to show one moment. */
-export function describeMoment(kind: EntryKind, before: Node, after: Node): MomentView {
+export function describeMoment(kind: EntryKind, before: Node, after: Node, by?: 'machine'): MomentView {
   const change = changeOf(before, after);
-  if (!change) return { caption: caption(kind, []), parts: [], from: 0, to: 0 };
+  if (!change) return { caption: caption(kind, [], by), parts: [], from: 0, to: 0 };
   const parts = compareWords(passage(before, change.from, change.toBefore), passage(after, change.from, change.toAfter));
-  return { caption: caption(kind, parts), parts: crop(parts), from: change.from, to: change.toAfter };
+  return { caption: caption(kind, parts, by), parts: crop(parts), from: change.from, to: change.toAfter };
 }

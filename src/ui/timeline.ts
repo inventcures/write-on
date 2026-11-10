@@ -12,6 +12,7 @@ const FAMILY_LABEL = {
   alternatives: 'Alternatives',
   ghost: 'Ghost (undecided)',
   overflow: 'Overflow (undecided)',
+  wo: 'WO, your pairing partner (suggestions)',
 } as const;
 const SPEEDS = [1, 4, 16];
 const PAUSE_GAP_MS = 10 * 60 * 1000;
@@ -139,7 +140,8 @@ export class Timeline {
     return this.root;
   }
 
-  open(): void {
+  /** Open at the moment closest to `at` (default: the newest), and replay from there if asked. */
+  open(at?: number, play = false): void {
     document.body.append(this.root);
     try {
       this.docs = replay(this.timeline);
@@ -148,7 +150,14 @@ export class Timeline {
     }
     this.root.focus();
     this.fit();
-    this.select(this.timeline.moments.length - 1);
+    const moments = this.timeline.moments;
+    let i = moments.length - 1;
+    if (at !== undefined) {
+      i = 0;
+      for (let k = 0; k < moments.length; k++) if (Math.abs(moments[k].t - at) < Math.abs(moments[i].t - at)) i = k;
+    }
+    this.select(play && at === undefined ? 0 : i);
+    if (play && moments.length > 1) this.togglePlay();
   }
 
   destroy(): void {
@@ -197,12 +206,18 @@ export class Timeline {
       const family = KIND_FAMILY[entry.kind] ?? 'writing';
       const x = i * this.zoom;
       const selected = i === this.index;
-      g.fillStyle = color(family);
+      g.fillStyle = entry.by === 'machine' ? css.getPropertyValue('--machine').trim() || '#4fb4ff' : color(family);
       // Second cues besides colour: ghosts are faded, Overflow is striped.
       g.globalAlpha = (selected ? 1 : 0.7) * (family === 'ghost' ? 0.55 : 1);
       const h = selected ? 34 : 22;
       const y = (height - h) / 2;
       g.fillRect(x, y, w, h);
+      if (entry.by === 'machine') {
+        // WO's moments also carry a dot above, so they read without colour.
+        g.beginPath();
+        g.arc(x + w / 2, y - 5, 2.2, 0, Math.PI * 2);
+        g.fill();
+      }
       if (family === 'overflow') {
         g.fillStyle = '#050a1c';
         for (let sy = y + 2; sy < y + h; sy += 5) g.fillRect(x, sy, w, 1.5);
@@ -237,7 +252,7 @@ export class Timeline {
     const entry = this.timeline.moments[this.index];
     const before = this.docs[this.index];
     const after = this.docs[this.index + 1];
-    this.moment = describeMoment(entry.kind, before, after);
+    this.moment = describeMoment(entry.kind, before, after, entry.by);
     const when = new Date(entry.t);
     this.whenEl.textContent = `Moment ${this.index + 1} of ${this.count} · ${when.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} ${when.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}`;
     this.captionEl.textContent = this.moment.caption;

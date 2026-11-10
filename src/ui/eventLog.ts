@@ -74,3 +74,17 @@ export async function loadTimeline(pieceId: string): Promise<PieceTimeline | nul
     return null;
   }
 }
+
+/** Every stored timeline in this browser, for "Your writing". */
+export async function readAllTimelines(): Promise<PieceTimeline[]> {
+  try {
+    const db = await open();
+    return await new Promise((resolve, reject) => {
+      const req = db.transaction(TIMELINE).objectStore(TIMELINE).getAll();
+      req.onsuccess = () => resolve(req.result as PieceTimeline[]);
+      req.onerror = () => reject(req.error);
+    });
+  } catch {
+    return [];
+  }
+}

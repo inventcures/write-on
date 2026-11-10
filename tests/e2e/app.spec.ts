@@ -179,3 +179,62 @@ test('a first visit explains itself and the tour waits for each step', async ({ 
   await page.keyboard.press('Escape');
   await expect(welcome).toBeHidden();
 });
+
+test('your writing: every piece on one line, an account, and replay from any moment', async ({ page }) => {
+  await page.keyboard.press('Control+Shift+R');
+  // Write a little in the sample, then start a second piece.
+  await page.getByText('first try away', { exact: false }).click();
+  await page.keyboard.press('End');
+  await page.keyboard.type(' More words here.');
+  await page.getByRole('button', { name: 'New piece' }).click();
+  await page.keyboard.type('# Second piece');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('It begins.');
+  await page.waitForTimeout(1200);
+  await page.keyboard.type(' Then it goes on.');
+  await page.waitForTimeout(700);
+
+  await page.getByRole('button', { name: /^Your writing/ }).click();
+  const yw = page.getByRole('dialog', { name: 'Your writing' });
+  await expect(yw).toBeVisible();
+  await expect(yw.locator('.yw-piece')).toHaveCount(2);
+  await expect(yw.locator('.yw-piece.current .yw-title')).toHaveText('Second piece');
+  await expect(yw.locator('.yw-summary')).toContainText('kept in this browser');
+
+  // Make an account; the open piece comes along, and the other can be brought in.
+  const email = `w${Date.now()}@example.com`;
+  await yw.getByLabel('Email').fill(email);
+  await yw.getByLabel('Password').fill('a long enough password');
+  await yw.getByRole('button', { name: 'Create account' }).click();
+  await expect(yw.locator('.yw-account')).toContainText(email);
+  await expect(yw.locator('.yw-summary')).toContainText('in your account');
+  await expect(yw.locator('.yw-piece')).toHaveCount(1);
+  await yw.getByRole('button', { name: /Bring the 1 piece/ }).click();
+  await expect(yw.locator('.yw-piece')).toHaveCount(2);
+
+  // Open the sample piece from the list, then replay it.
+  await yw.getByRole('button', { name: 'Write it three ways' }).click();
+  await expect(yw).toBeHidden();
+  await expect(page.locator('.ProseMirror')).toContainText('More words here.');
+  await page.getByRole('button', { name: /^Your writing/ }).click();
+  await yw.locator('.yw-piece', { hasText: 'Second piece' }).getByRole('button', { name: 'Replay' }).click();
+  const tl = page.getByRole('dialog', { name: 'Timeline' });
+  await expect(tl).toBeVisible();
+  await expect(tl).toContainText('of 2');
+  await expect(tl).toContainText('Then it goes on.');
+  await page.keyboard.press('Escape');
+
+  // Signed in on a fresh visit, the account's pieces are there.
+  await page.evaluate(() => localStorage.clear());
+  await page.evaluate(() => localStorage.setItem('write-on:welcomed', '1'));
+  await page.reload();
+  await page.keyboard.press('Control+Shift+H');
+  await expect(yw.locator('.yw-account')).toContainText(email);
+  await expect(yw.locator('.yw-piece')).toHaveCount(2);
+
+  // Signing out leaves none of the account's writing on screen.
+  await yw.getByRole('button', { name: 'Sign out' }).click();
+  await expect(yw.locator('.yw-summary')).toContainText('kept in this browser');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.ProseMirror')).not.toContainText('Second piece');
+});
