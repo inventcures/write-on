@@ -1,0 +1,112 @@
+[
+ {
+  "start": 0.4,
+  "end": 2.57,
+  "text": "Hi, I am Ashish."
+ },
+ {
+  "start": 2.79,
+  "end": 5.93,
+  "text": "Today, 10th November,"
+ },
+ {
+  "start": 6.15,
+  "end": 11.72,
+  "text": "Anthropic released Claude Fable 5.2."
+ },
+ {
+  "start": 11.94,
+  "end": 16.25,
+  "text": "What can I do that has not been done before?"
+ },
+ {
+  "start": 16.47,
+  "end": 18.94,
+  "text": "A true thought partner, as you write."
+ },
+ {
+  "start": 19.16,
+  "end": 22.93,
+  "text": "Writing is thinking, and if you outsource your thinking,"
+ },
+ {
+  "start": 23.15,
+  "end": 26.08,
+  "text": "that's actually atrophying your thinking."
+ },
+ {
+  "start": 26.3,
+  "end": 29.035,
+  "text": "Full credit to Jason Fried."
+ },
+ {
+  "start": 29.255,
+  "end": 33.855,
+  "text": "Let me take that as the starting point, not as the end point."
+ },
+ {
+  "start": 34.075,
+  "end": 38.355,
+  "text": "Did a bunch of deep research, using again Fable 5.2."
+ },
+ {
+  "start": 38.575,
+  "end": 44.275,
+  "text": "Shout-out to Poteto, @poteto,"
+ },
+ {
+  "start": 44.495,
+  "end": 53.645,
+  "text": "whose suite of skills, PStack, had a skill called unslop, which I tweaked for my personal writing."
+ },
+ {
+  "start": 53.865,
+  "end": 59.27,
+  "text": "Use LLMs to write better, and avoid losing your own voice."
+ },
+ {
+  "start": 59.49,
+  "end": 63.08,
+  "text": "Reading a bunch of stuff by David Perell,"
+ },
+ {
+  "start": 63.3,
+  "end": 66.1,
+  "text": "all my free time on Substack,"
+ },
+ {
+  "start": 66.32,
+  "end": 68.085,
+  "text": "all the people I admire,"
+ },
+ {
+  "start": 68.305,
+  "end": 71.43,
+  "text": "ML in health and drug discovery."
+ },
+ {
+  "start": 71.65,
+  "end": 77.3,
+  "text": "Shout-out to Jasmine Sun, shout-out to Celine Nguyen."
+ },
+ {
+  "start": 77.52,
+  "end": 80.45,
+  "text": "The code is open for now,"
+ },
+ {
+  "start": 80.67,
+  "end": 82.7,
+  "text": "happy to take pull requests,"
+ },
+ {
+  "start": 82.92,
+  "end": 85.69,
+  "text": "brickbats and praise welcome."
+ },
+ {
+  "start": 86.29,
+  "end": 87.735,
+  "text": "Here's my attempt."
+ }
+]

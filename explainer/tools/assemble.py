@@ -2,7 +2,7 @@
 
 Usage:
     assemble.py            # low-quality preview -> output/preview.mp4
-    assemble.py --final    # 1080p60 -> output/write-on-orientation.mp4 + .srt
+    assemble.py --final    # 1080p60 -> output/vaani_sakhi_explainer.mp4 + .srt
 """
 
 import argparse
@@ -12,7 +12,7 @@ import tempfile
 import textwrap
 from pathlib import Path
 
-from render import SCENES, VIDEO_DIR, video_path
+from render import ORDER, SCENES, VIDEO_DIR, video_path
 
 MAX_CAPTION_CHARS = 84
 LINE_CHARS = 44
@@ -24,11 +24,17 @@ def probe_duration(path: Path) -> float:
     return int(h) * 3600 + int(m) * 60 + float(s)
 
 
+# The synthesized narration is studio-dry. A short, quiet early reflection and a softer top end place it in
+# the same small room as the maker's recorded voice (scene 99), which gets no filter here.
+NARRATION_ROOM = "aecho=1.0:0.9:11|19|29:0.10|0.07|0.04,highshelf=f=7000:g=-2.5,volume=0.7dB,alimiter=limit=0.84:level=false"
+
+
 def mux(number: int, final: bool, out: Path) -> None:
     audio = VIDEO_DIR / "audio" / f"scene_{number:02d}.wav"
+    room = [] if number == 99 else ["-af", NARRATION_ROOM]
     subprocess.run(
         ["ffmpeg", "-y", "-loglevel", "error", "-i", str(video_path(number, final)), "-i", str(audio),
-         "-map", "0:v:0", "-map", "1:a:0", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-ar", "48000",
+         "-map", "0:v:0", "-map", "1:a:0", *room, "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-ar", "48000",
          "-shortest", str(out)],
         check=True,
     )
@@ -61,7 +67,13 @@ def caption_chunks(text: str) -> list[str]:
 
 def write_captions(offsets: dict[int, float], out: Path) -> None:
     entries = []
-    for number in sorted(offsets):
+    for number in ORDER:
+        own = VIDEO_DIR / "timings" / f"scene_{number:02d}_captions.json"
+        if own.exists():  # the maker's recording: captions from its transcript
+            for seg in json.loads(own.read_text()):
+                entries.append((offsets[number] + seg["start"], offsets[number] + seg["end"],
+                                "\n".join(textwrap.wrap(seg["text"], LINE_CHARS, break_on_hyphens=False))))
+            continue
         timing = json.loads((VIDEO_DIR / "timings" / f"scene_{number:02d}.json").read_text())
         for beat in timing["beats"]:
             chunks = caption_chunks(beat["display_text"])
@@ -75,6 +87,22 @@ def write_captions(offsets: dict[int, float], out: Path) -> None:
                            for i, (a, b, t) in enumerate(entries, 1)))
 
 
+def lay_bed(src: Path, out: Path) -> None:
+    """Lay one quiet room-tone bed (audio/bed.wav, looped) under the whole video, so the maker's recorded
+    voice and the synthesized narration sound like the same room. Without a bed, copy as is."""
+    bed = VIDEO_DIR / "audio" / "bed.wav"
+    if not bed.exists():
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(src), "-c", "copy", str(out)], check=True)
+        return
+    subprocess.run(
+        ["ffmpeg", "-y", "-loglevel", "error", "-i", str(src), "-stream_loop", "-1", "-i", str(bed),
+         "-filter_complex", "[0:a][1:a]amix=inputs=2:duration=first:normalize=0[a]",
+         "-map", "0:v:0", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-ar", "48000",
+         "-movflags", "+faststart", str(out)],
+        check=True,
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--final", action="store_true")
@@ -86,7 +114,7 @@ def main() -> None:
     offsets, cursor = {}, 0.0
     with tempfile.TemporaryDirectory() as tmp:
         parts = []
-        for i, number in enumerate(sorted(SCENES), 1):
+        for i, number in enumerate(ORDER, 1):
             part = Path(tmp) / f"scene_{number:02d}.mp4"
             mux(number, args.final, part)
             offsets[number] = cursor
@@ -96,7 +124,8 @@ def main() -> None:
         listing = Path(tmp) / "list.txt"
         listing.write_text("".join(f"file '{p}'\n" for p in parts))
         subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", str(listing),
-                        "-c", "copy", "-movflags", "+faststart", str(final_dir / name)], check=True)
+                        "-c", "copy", "-movflags", "+faststart", str(Path(tmp) / "joined.mp4")], check=True)
+        lay_bed(Path(tmp) / "joined.mp4", final_dir / name)
     captions = final_dir / ("write-on-orientation.srt" if args.final else "preview.srt")
     write_captions(offsets, captions)
     print(f"{final_dir / name}  ({int(cursor // 60)}:{cursor % 60:04.1f})")

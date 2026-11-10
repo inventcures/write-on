@@ -1,62 +1,62 @@
 {
   "scene": 2,
   "title": "Alternatives",
-  "duration": 56.602,
+  "duration": 55.918,
   "beats": [
     {
       "id": "2.1",
       "kind": "narration",
-      "start": 0.5,
+      "start": 0.417,
       "speech": 6.112,
-      "end": 6.987,
+      "end": 6.845,
       "display_text": "Idea one comes from Jason Fried's Write_On. Not version control, but alternative control."
     },
     {
       "id": "2.2",
       "kind": "narration",
-      "start": 6.987,
+      "start": 6.845,
       "speech": 9.263,
-      "end": 16.625,
+      "end": 16.425,
       "display_text": "Version control thinks in time: snapshots of the whole document, Monday, Tuesday, Wednesday. To find an old phrasing, you dig through the past."
     },
     {
       "id": "2.3",
       "kind": "narration",
-      "start": 16.625,
+      "start": 16.425,
       "speech": 6.371,
-      "end": 23.371,
+      "end": 23.113,
       "display_text": "Alternative control thinks in place. The other ways of saying this one line live right underneath it."
     },
     {
       "id": "2.4",
       "kind": "key",
-      "start": 23.371,
+      "start": 23.113,
       "speech": 6.607,
-      "end": 30.561,
+      "end": 30.22,
       "display_text": "Put the caret on a word and press Ctrl+Shift+A. Now that word can hold variants."
     },
     {
       "id": "2.5",
       "kind": "narration",
-      "start": 30.561,
+      "start": 30.22,
       "speech": 6.86,
-      "end": 37.796,
+      "end": 37.396,
       "display_text": "Hover and press the arrow keys, and you read each option in context, in the sentence where it has to live."
     },
     {
       "id": "2.6",
       "kind": "narration",
-      "start": 37.796,
+      "start": 37.396,
       "speech": 11.403,
-      "end": 49.574,
+      "end": 49.115,
       "display_text": "It works at three sizes, which Write-on calls grains. A word gets a thin violet wave. A sentence, a lower rose wave. A paragraph, a copper bar in the margin."
     },
     {
       "id": "2.7",
       "kind": "narration",
-      "start": 49.574,
+      "start": 49.115,
       "speech": 5.82,
-      "end": 55.769,
+      "end": 55.252,
       "display_text": "And flipping between variants is not an edit. Nothing is lost, and there's nothing to undo."
     }
   ]

@@ -29,10 +29,6 @@
     - scene: 1
       name: Title
       beats:
-        - id: "1.0"
-          kind: narration
-          visual: "A date card, 10 November 2026. A column of post cards scrolls fast: hardware, chemistry, agents. It slows; one question remains."
-          text: "Write-on began on November the tenth, the day Anthropic released Fable 5.2. Timelines filled with people pushing it to its limits. One question stuck instead: how do you write more, and more thoughtfully, without handing your thinking to the machine?"
         - id: "1.1"
           kind: narration
           visual: "Title card 'write-on' with a word-grain wave under 'on'. Subtitle: an orientation."

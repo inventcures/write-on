@@ -159,6 +159,12 @@ class TimedScene(Scene):
         if self.drift:
             print(f"DRIFT scene {self.scene_number}: {self.drift}", file=sys.stderr)
 
+    def clear_all_but(self, *keep, run_time=0.5):
+        others = [m for m in self.mobjects if m is not self.frame and m not in keep]
+        if others:
+            self.play(*[FadeOut(m) for m in others], run_time=run_time)
+            self.remove(*others)
+
     def clear_all(self, run_time=0.6):
         others = [m for m in self.mobjects if m is not self.frame]
         if others:

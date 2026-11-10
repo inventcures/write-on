@@ -1,54 +1,54 @@
 {
   "scene": 5,
   "title": "MentalModel",
-  "duration": 47.172,
+  "duration": 46.545,
   "beats": [
     {
       "id": "5.1",
       "kind": "narration",
-      "start": 0.5,
+      "start": 0.416,
       "speech": 11.009,
-      "end": 11.884,
+      "end": 11.742,
       "display_text": "Idea four is the mental model. A draft isn't one line of text. It's a tree of possibilities, and you decide when each branch closes. Or whether it ever does."
     },
     {
       "id": "5.2",
       "kind": "narration",
-      "start": 11.884,
+      "start": 11.742,
       "speech": 6.048,
-      "end": 18.307,
+      "end": 18.106,
       "display_text": "That gives you three habits. When you're torn between two phrasings, don't choose yet. Add a variant."
     },
     {
       "id": "5.3",
       "kind": "narration",
-      "start": 18.307,
+      "start": 18.106,
       "speech": 4.278,
-      "end": 22.96,
+      "end": 22.701,
       "display_text": "When you're unsure a line belongs, ghost it instead of deleting it."
     },
     {
       "id": "5.4",
       "kind": "narration",
-      "start": 22.96,
+      "start": 22.701,
       "speech": 3.153,
-      "end": 26.488,
+      "end": 26.17,
       "display_text": "And when you love a line that doesn't fit, send it to Overflow."
     },
     {
       "id": "5.5",
       "kind": "key",
-      "start": 26.488,
-      "speech": 12.509,
-      "end": 39.58,
+      "start": 26.17,
+      "speech": 12.508,
+      "end": 39.178,
       "display_text": "Your first minute: a welcome card and a short tour walk you through each move once. Ctrl+Shift+R hides the tools when you want just your words. The question-mark button brings the card, and this video, back."
     },
     {
       "id": "5.6",
       "kind": "narration",
-      "start": 39.58,
+      "start": 39.178,
       "speech": 6.384,
-      "end": 46.339,
+      "end": 45.879,
       "display_text": "Then write the way you always do. Reach for these tools only at the moment you feel the urge to delete."
     }
   ]
