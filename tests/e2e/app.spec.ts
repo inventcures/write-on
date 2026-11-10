@@ -153,6 +153,10 @@ test('a first visit explains itself and the tour waits for each step', async ({ 
   await expect(welcome).toContainText('Ghost');
   await expect(welcome).toContainText('Overflow');
   await expect(welcome.getByRole('link', { name: 'pair programming' })).toHaveAttribute('href', /on-pair-programming/);
+  await expect(welcome.getByRole('link', { name: 'The story' })).toHaveAttribute('href', 'https://inventcures.github.io/write-on/');
+  const video = welcome.getByLabel('Explainer video');
+  await expect(video).toHaveAttribute('poster', '/explainer.jpg');
+  expect(await video.evaluate((v: HTMLVideoElement) => new Promise((ok) => (v.readyState >= 1 ? ok(v.duration) : v.addEventListener('loadedmetadata', () => ok(v.duration)))))).toBeGreaterThan(240);
   await welcome.getByRole('button', { name: /Show me how/ }).click();
   await expect(welcome).toBeHidden();
   await expect(page.locator('body')).not.toHaveClass(/read/);

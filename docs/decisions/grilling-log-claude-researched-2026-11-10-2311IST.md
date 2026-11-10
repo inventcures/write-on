@@ -297,3 +297,13 @@ tp53: "add user controls - auth, login, history, event log (of ALL your writing)
 
 ### Q43. An account with a password already exists for the same email. Join or refuse?
 - **Answer:** join, but only when Google says the email is verified. Refusing would leave writers locked out of their own writing for using the "wrong" button. A verified Google email proves the same thing a password sign-up would have needed to prove.
+
+## Round 12: the video and where this came from (2026-11-10)
+
+### Q44. The orientation video is ready. Where does it live?
+- **Answer:** in `public/` as `explainer.mp4`, `.jpg` and `.vtt` (11 MB), served by the app, so the welcome card and the project page both play it from https://write-on.up.railway.app/explainer.mp4. It is our own manim drawing with no frames from Fried's video, so it may be in the public repo. Its source is in `explainer/`.
+- The `?` button keeps reopening the welcome card, because the video's narration says so.
+
+### Q45. tp53's origin story: how much of it goes in the app?
+- **Answer:** two lines at the foot of the welcome card (built from the day Fable 5.2 came out, on Fried's Write_On idea, to write more thoughtfully without handing the thinking to an LLM), with a link to the project page for the full story. The card is for learning the editor; the story belongs on the page.
+- **Also fixed:** the card said everything stays in this browser, which stopped being true with accounts. It now says "unless you sign in".
