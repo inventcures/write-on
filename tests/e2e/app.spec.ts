@@ -238,3 +238,25 @@ test('your writing: every piece on one line, an account, and replay from any mom
   await page.keyboard.press('Escape');
   await expect(page.locator('.ProseMirror')).not.toContainText('Second piece');
 });
+
+test('? opens the shortcuts when not typing, and is a question mark in the page', async ({ page }) => {
+  const sheet = page.getByRole('dialog', { name: 'Shortcuts and colours' });
+  // In the page, ? is just a question mark.
+  await page.keyboard.press('Control+Shift+R');
+  await page.getByText('first try away', { exact: false }).click();
+  const marks = async () => ((await page.locator('.ProseMirror > p').first().textContent()) ?? '').split('?').length - 1;
+  const before = await marks();
+  await page.keyboard.type('?');
+  await expect(sheet).toBeHidden();
+  expect(await marks()).toBe(before + 1);
+  // Ctrl+? opens it from anywhere, including the page.
+  await page.keyboard.press('Control+Shift+Slash');
+  await expect(sheet).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(sheet).toBeHidden();
+  // Outside the text, a bare ? opens it.
+  await page.locator('.chrome.bottom').getByRole('button', { name: 'Save' }).focus();
+  await page.keyboard.press('Shift+Slash');
+  await expect(sheet).toBeVisible();
+  await expect(sheet).toContainText('when not typing in the text');
+});

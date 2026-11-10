@@ -16,6 +16,7 @@ export type ActionId =
   | 'timeline'
   | 'writing'
   | 'source'
+  | 'shortcuts'
   | 'save'
   | 'open';
 
@@ -32,6 +33,7 @@ export const ACTIONS: { id: ActionId; label: string; combo: string }[] = [
   { id: 'timeline', label: 'Timeline: replay and revisit every moment', combo: 'Ctrl+Shift+KeyL' },
   { id: 'writing', label: 'Your writing: every piece and moment, on one line', combo: 'Ctrl+Shift+KeyH' },
   { id: 'source', label: 'Source view (the raw file)', combo: 'Ctrl+KeyU' },
+  { id: 'shortcuts', label: 'This list of shortcuts (also ? when not typing in the text)', combo: 'Ctrl+Shift+Slash' },
   { id: 'save', label: 'Save', combo: 'Ctrl+KeyS' },
   { id: 'open', label: 'Open', combo: 'Ctrl+KeyO' },
 ];
@@ -42,6 +44,7 @@ export const FIXED: [string, string][] = [
   ['Delete the showing alternative', 'hover + Delete'],
   ['Undo, Redo', 'Ctrl+Z  Ctrl+Shift+Z'],
   ['Bold, Italic', 'Ctrl+B  Ctrl+I'],
+  ['Shortcuts list, when not typing in the text', '?'],
   ['Close a panel or sheet', 'Esc'],
 ];
 

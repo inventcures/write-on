@@ -637,6 +637,7 @@ export function startApp(root: HTMLElement): void {
       case 'overflow': toggleOverflow(); return true;
       case 'timeline': openTimeline(); return true;
       case 'writing': void openWriting(); return true;
+      case 'shortcuts': showShortcuts(); return true;
       case 'source': showSource(); return true;
       case 'save': void saveFile(); return true;
       case 'open': void openFile(); return true;
@@ -693,7 +694,17 @@ export function startApp(root: HTMLElement): void {
   );
   window.addEventListener('keydown', (e) => {
     if (timeline || writing || isSheetOpen() || e.defaultPrevented || view.dom.contains(e.target as globalThis.Node)) return;
-    if (runShortcut(e, false)) e.preventDefault();
+    if (runShortcut(e, false)) {
+      e.preventDefault();
+      return;
+    }
+    // A bare ? opens the shortcuts, but never while typing: in the page it is a question mark.
+    const target = e.target as HTMLElement | null;
+    const typing = !!target?.closest('input, textarea, select, [contenteditable="true"]');
+    if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.altKey && !typing && !onboarding.welcoming) {
+      e.preventDefault();
+      showShortcuts();
+    }
   });
 
   window.addEventListener('resize', () => requestAnimationFrame(redraw));
