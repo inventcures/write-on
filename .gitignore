@@ -3,6 +3,8 @@ dist/
 test-results/
 playwright-report/
 *.mp4
+# Our own orientation video (no Fried footage) is the one mp4 that belongs here.
+!public/explainer.mp4
 ref-video/
 .DS_Store
 .e2e-data/

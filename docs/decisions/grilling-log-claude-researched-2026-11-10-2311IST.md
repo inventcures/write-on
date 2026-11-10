@@ -300,8 +300,8 @@ tp53: "add user controls - auth, login, history, event log (of ALL your writing)
 
 ## Round 12: the video and where this came from (2026-11-10)
 
-### Q44. The orientation video is ready. Where does it live?
-- **Answer:** in `public/` as `explainer.mp4`, `.jpg` and `.vtt` (11 MB), served by the app, so the welcome card and the project page both play it from https://write-on.up.railway.app/explainer.mp4. It is our own manim drawing with no frames from Fried's video, so it may be in the public repo. Its source is in `explainer/`.
+### Q44. The orientation video is ready (v2, 4:54). Where does it live?
+- **Answer:** in `public/` as `explainer.mp4`, `.jpg` and `.vtt` (12 MB), served by the app, so the welcome card and the project page both play it from https://write-on.up.railway.app/explainer.mp4. It is our own manim drawing with no frames from Fried's video, so it may be in the public repo. Its source is in `explainer/`.
 - The `?` button keeps reopening the welcome card, because the video's narration says so.
 
 ### Q45. tp53's origin story: how much of it goes in the app?
