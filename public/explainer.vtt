@@ -1,271 +1,308 @@
 WEBVTT
 
-00:00.500 --> 00:03.819
+00:00.400 --> 00:02.570
+Hi, I am Ashish.
+
+00:02.790 --> 00:05.930
+Today, 10th November,
+
+00:06.150 --> 00:11.720
+Anthropic released Claude Fable 5.2.
+
+00:11.940 --> 00:16.250
+What can I do that has not been done before?
+
+00:16.470 --> 00:18.940
+A true thought partner, as you write.
+
+00:19.160 --> 00:22.930
+Writing is thinking, and if you outsource
+your thinking,
+
+00:23.150 --> 00:26.080
+that's actually atrophying your thinking.
+
+00:26.300 --> 00:29.035
+Full credit to Jason Fried.
+
+00:29.255 --> 00:31.760
+Shout-out to Poteto, @poteto,
+
+00:31.980 --> 00:36.100
+whose suite of skills, PStack, had a skill
+called unslop.
+
+00:36.320 --> 00:41.725
+Use LLMs to write better, and avoid losing
+your own voice.
+
+00:41.945 --> 00:45.535
+Reading a bunch of stuff by David Perell,
+
+00:45.755 --> 00:51.405
+Shout-out to Jasmine Sun, shout-out to
+Celine Nguyen.
+
+00:51.625 --> 00:54.555
+The code is open for now,
+
+00:54.775 --> 00:57.545
+brickbats and praise welcome.
+
+00:58.145 --> 00:59.590
+Here's my attempt.
+
+00:59.626 --> 01:02.945
 Here's a sentence. The meeting was really
 productive.
 
-00:03.819 --> 00:07.765
+01:02.945 --> 01:06.890
 You read it back, and something feels off.
 Maybe it's the word.
 
-00:07.765 --> 00:09.644
+01:06.890 --> 01:08.769
 Maybe it's the whole sentence.
 
-00:10.018 --> 00:14.512
+01:09.085 --> 01:13.579
 Most editors give you exactly two moves.
 Keep it, or delete it.
 
-00:14.888 --> 00:17.494
+01:13.897 --> 01:16.503
 Delete it, and your first try is gone for
 good.
 
-00:17.494 --> 00:20.488
+01:16.503 --> 01:19.496
 Keep it, and the better version may never
 get written.
 
-00:20.488 --> 00:23.981
+01:19.496 --> 01:22.989
 Either way, you have to decide before you've
 finished thinking.
 
-00:24.356 --> 00:26.930
+01:23.305 --> 01:25.879
 Write-on gives you a third move. Keep both.
 
-00:28.640 --> 00:33.115
-Write-on began on November the tenth, the
-day Anthropic released Fable 5.2.
-
-00:33.115 --> 00:36.337
-Timelines filled with people pushing it to
-its limits.
-
-00:36.337 --> 00:41.169
-One question stuck instead: how do you write
-more, and more thoughtfully, without
-
-00:41.169 --> 00:43.377
-handing your thinking to the machine?
-
-00:43.751 --> 00:48.569
+01:27.296 --> 01:32.112
 This is a short orientation, not a manual.
 Write-on is meant to bend to the way you
 
-00:48.569 --> 00:50.369
+01:32.112 --> 01:33.911
 think, not the other way round.
 
-00:50.744 --> 00:55.529
+01:34.227 --> 01:39.010
 But four ideas make it click much faster,
 especially if your hands already know
 
-00:55.529 --> 00:56.983
+01:39.010 --> 01:40.463
 another editor by heart.
 
-00:58.690 --> 01:01.677
+01:41.867 --> 01:44.854
 Idea one comes from Jason Fried's Write_On.
 
-01:01.677 --> 01:04.802
+01:44.854 --> 01:47.979
 Not version control, but alternative
 control.
 
-01:05.177 --> 01:10.461
+01:48.295 --> 01:53.579
 Version control thinks in time: snapshots of
 the whole document, Monday, Tuesday,
 
-01:10.461 --> 01:14.440
+01:53.579 --> 01:57.558
 Wednesday. To find an old phrasing, you dig
 through the past.
 
-01:14.815 --> 01:19.912
+01:57.875 --> 02:02.972
 Alternative control thinks in place. The
 other ways of saying this one line live
 
-01:19.912 --> 01:21.186
+02:02.972 --> 02:04.246
 right underneath it.
 
-01:21.561 --> 01:25.492
+02:04.563 --> 02:08.494
 Put the caret on a word and press
 Ctrl+Shift+A.
 
-01:25.492 --> 01:28.168
+02:08.494 --> 02:11.170
 Now that word can hold variants.
 
-01:28.751 --> 01:34.239
+02:11.670 --> 02:17.158
 Hover and press the arrow keys, and you read
 each option in context, in the sentence
 
-01:34.239 --> 01:35.611
+02:17.158 --> 02:18.530
 where it has to live.
 
-01:35.986 --> 01:39.885
+02:18.846 --> 02:22.745
 It works at three sizes, which Write-on
 calls grains.
 
-01:39.885 --> 01:44.446
+02:22.745 --> 02:27.306
 A word gets a thin violet wave. A sentence,
 a lower rose wave.
 
-01:44.446 --> 01:47.389
+02:27.306 --> 02:30.249
 A paragraph, a copper bar in the margin.
 
-01:47.764 --> 01:50.674
+02:30.565 --> 02:33.475
 And flipping between variants is not an
 edit.
 
-01:50.674 --> 01:53.584
+02:33.475 --> 02:36.385
 Nothing is lost, and there's nothing to
 undo.
 
-01:55.290 --> 02:02.005
+02:37.797 --> 02:44.512
 Idea two. Delete is a cliff. Write-on adds
 two gentler slopes before it.
 
-02:02.380 --> 02:08.279
+02:44.828 --> 02:50.727
 The first is Ghost. Press Ctrl+/ and the
 text fades almost to nothing, but stays
 
-02:08.279 --> 02:09.828
+02:50.727 --> 02:52.276
 exactly where it was.
 
-02:10.411 --> 02:13.144
+02:52.776 --> 02:55.509
 Now you can read the paragraph as if it were
 gone.
 
-02:13.144 --> 02:16.423
+02:55.509 --> 02:58.788
 If it reads better, leave it ghosted. If
 not, bring it back.
 
-02:16.798 --> 02:21.986
+02:59.105 --> 03:04.293
 The second is Overflow. A line you love, but
 that doesn't belong here, goes to the
 
-02:21.986 --> 02:25.593
+03:04.293 --> 03:07.900
 side with Ctrl+Shift+X, and waits until you
 want it back.
 
-02:26.175 --> 02:29.971
+03:08.400 --> 03:12.197
 So instead of keep or delete, you get a
 dial.
 
-02:29.971 --> 02:35.877
+03:12.197 --> 03:18.103
 Keep it, hold a variant, ghost it, overflow
 it, and only then, delete.
 
-02:37.590 --> 02:42.636
+03:19.526 --> 03:24.572
 Idea three is a small vocabulary. The
 colours always mean the same thing.
 
-02:42.636 --> 02:46.161
+03:24.572 --> 03:28.097
 Green is kept. Amber is undecided. Red is
 rejected.
 
-02:46.535 --> 02:52.174
+03:28.414 --> 03:34.053
 Every choice you make lands on a timeline,
 which opens with Ctrl+Shift+L.
 
-02:52.757 --> 02:58.404
+03:34.552 --> 03:40.199
 Zoom out and you see the shape of a session,
 bursts of drafting, stretches of
 
-02:58.404 --> 03:02.217
+03:40.199 --> 03:44.012
 cutting. Zoom in and each moment shows what
 changed.
 
-03:02.591 --> 03:07.163
+03:44.329 --> 03:48.901
 You can replay a piece being written, then
 click any moment and start editing from
 
-03:07.163 --> 03:07.498
+03:48.901 --> 03:49.236
 there.
 
-03:09.210 --> 03:13.614
+03:50.656 --> 03:55.060
 Idea four is the mental model. A draft isn't
 one line of text.
 
-03:13.614 --> 03:18.514
+03:55.060 --> 03:59.960
 It's a tree of possibilities, and you decide
 when each branch closes.
 
-03:18.514 --> 03:20.219
+03:59.960 --> 04:01.665
 Or whether it ever does.
 
-03:20.594 --> 03:25.493
+04:01.982 --> 04:06.881
 That gives you three habits. When you're
 torn between two phrasings, don't choose
 
-03:25.493 --> 03:26.642
+04:06.881 --> 04:08.030
 yet. Add a variant.
 
-03:27.017 --> 03:31.295
+04:08.346 --> 04:12.624
 When you're unsure a line belongs, ghost it
 instead of deleting it.
 
-03:31.670 --> 03:34.823
+04:12.941 --> 04:16.094
 And when you love a line that doesn't fit,
 send it to Overflow.
 
-03:35.198 --> 03:40.263
+04:16.410 --> 04:21.474
 Your first minute: a welcome card and a
 short tour walk you through each move once.
 
-03:40.263 --> 03:43.863
+04:21.474 --> 04:25.074
 Ctrl+Shift+R hides the tools when you want
 just your words.
 
-03:43.863 --> 03:47.707
+04:25.074 --> 04:28.918
 The question-mark button brings the card,
 and this video, back.
 
-03:48.290 --> 03:53.485
+04:29.418 --> 04:34.613
 Then write the way you always do. Reach for
 these tools only at the moment you feel
 
-03:53.485 --> 03:54.674
+04:34.613 --> 04:35.802
 the urge to delete.
 
-03:56.380 --> 04:01.532
+04:37.227 --> 04:42.379
 Why does this matter? Because every flip,
 ghost and stash is a small decision, and
 
-04:01.532 --> 04:04.297
+04:42.379 --> 04:45.144
 your decisions are a trace of how you think.
 
-04:04.672 --> 04:09.271
+04:45.460 --> 04:50.059
 If you pick the shorter variant eight times
 out of ten, that's a pattern, and it
 
-04:09.271 --> 04:10.133
+04:50.059 --> 04:50.921
 belongs to you.
 
-04:10.801 --> 04:15.962
+04:51.506 --> 04:56.667
 To be clear about what exists: today,
 Write-on is the workbench, plus one optional
 
-04:15.962 --> 04:20.683
+04:56.667 --> 05:01.388
 machine helper. Press Ctrl+Shift+G and three
 suggestions arrive in blue, as
 
-04:20.683 --> 04:24.459
+05:01.388 --> 05:05.164
 alternatives you can flip to. They never
 replace your words.
 
-04:24.459 --> 04:29.558
+05:05.164 --> 05:10.263
 Next, we plan to learn from your choices and
 past writing, with quiet nudges that
 
-04:29.558 --> 04:32.579
+05:10.263 --> 05:13.284
 ask questions, and editor personas who
 critique.
 
-04:32.953 --> 04:36.512
+05:13.600 --> 05:17.159
 One thing won't change: it never writes the
 piece for you.
 
-04:36.512 --> 04:40.869
+05:17.159 --> 05:21.516
 It keeps every option within reach, and
 learns to ask better questions.
 
-04:42.579 --> 04:47.616
+05:22.926 --> 05:27.962
 So the next time you reach for delete,
 pause, and keep both.
 
-04:47.616 --> 04:48.371
+05:27.962 --> 05:28.717
 Write on.
