@@ -574,6 +574,7 @@ export function startApp(root: HTMLElement): void {
       interim: (heard) => listening.hidden || showListening(into === 'alternative' ? `${spoken} ${heard}`.trim() : heard, into),
       end: (error) => {
         listening.hidden = true;
+        body.classList.remove('speaking');
         speakBtn.classList.remove('on');
         if (into === 'alternative' && spoken) panel.addSpoken(spoken);
         if (error) notify(error, 6000);
@@ -581,6 +582,7 @@ export function startApp(root: HTMLElement): void {
       },
     });
     showListening('', into);
+    body.classList.add('speaking');
     speakBtn.classList.add('on');
     await listener.start();
   }
