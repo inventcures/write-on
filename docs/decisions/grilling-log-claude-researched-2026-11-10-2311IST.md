@@ -242,3 +242,21 @@ The code-review step ran two reviewers side by side: one against the repo's stan
 
 ### Q33. How is a public URL kept from spending the key?
 - **Answer:** an access code the server checks, plus per-caller and daily caps. Off by default. See ADR-0007.
+
+## Round 8: first visit (2026-11-10)
+
+tp53 on the live app: "this is too minimal... new users including me are at a loss as to what to do with this", and asked for the explainer video on the landing screen when it is ready.
+
+### Q34. Keep Fried's opening in read mode?
+- **Before:** the app opened in read mode (Q5), with every tool hidden and the only guidance in the sample text.
+- **Now:** a first visit opens a welcome card, and closing it brings the tools in. Returning visitors still open in read mode, as Fried's does, and read mode now says beside the word count how to get the tools back. A `?` button is always visible.
+- **Why:** read mode works for someone who already knows what's hidden. A newcomer sees a static page with no affordances. That was tp53's experience, and they know the product better than anyone.
+
+### Q35. What does onboarding look like?
+- **Options:** a static help page, a video only, tooltips on everything, or a guided tour that waits for the writer to act.
+- **Answer:** a welcome card covering what it is in two sentences, the three ideas (Alternatives, Ghost, Overflow) each with its key, and the video when it exists. Then an optional one-minute tour of five steps: flip, make an alternative, ghost, stash, timeline. Each step waits for the writer to actually do it, ticks green, and moves on. It can be skipped at any point.
+- **Why:** you learn an editor by using it. The tour does nothing for you; it only tells you where to look. That is the same stance the product takes toward writing.
+- **Also:** the main actions (Alternatives, Suggest, Ghost, Stash) are now visible buttons in the bottom bar, not only shortcuts. They keep the page selection when pressed. On phones they are hidden for now.
+
+### Q36. Where does the explainer video go?
+- **Answer:** the welcome card shows `/explainer.mp4` when that file exists (put it in `public/explainer.mp4`) and shows nothing when it doesn't, so the slot is ready before the video. The video is our own explainer, not Fried's footage, so it may live in the public repo.

@@ -4,7 +4,10 @@ const pieceFile = (page: Page) => page.evaluate(() => (window as unknown as { wr
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
-  await page.evaluate(() => localStorage.clear());
+  await page.evaluate(() => {
+    localStorage.clear();
+    localStorage.setItem('write-on:welcomed', '1');
+  });
   await page.reload();
 });
 
@@ -139,4 +142,39 @@ test('suggestions arrive in blue under the writer\'s word, behind the access cod
   const shown = (await pageText.allTextContents()).join(' ');
   expect(shown).toContain(String(asked.text));
   expect(shown).not.toMatch(/\b(effort|attempt|stab|shot)\b/);
+});
+
+test('a first visit explains itself and the tour waits for each step', async ({ page }) => {
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  const welcome = page.getByRole('dialog', { name: 'Welcome to Write_On' });
+  await expect(welcome).toBeVisible();
+  await expect(welcome).toContainText('Alternatives');
+  await expect(welcome).toContainText('Ghost');
+  await expect(welcome).toContainText('Overflow');
+  await welcome.getByRole('button', { name: /Show me how/ }).click();
+  await expect(welcome).toBeHidden();
+  await expect(page.locator('body')).not.toHaveClass(/read/);
+  const tour = page.locator('.tour');
+  await expect(tour).toContainText('1 of 5');
+  // Step 1 waits for a flip.
+  const sketch = page.locator('.alt-word', { hasText: 'sketch' });
+  await sketch.hover();
+  await page.keyboard.press('ArrowRight');
+  await expect(tour).toContainText('2 of 5');
+  // Step 2: the Alternatives button keeps the caret where it was.
+  await page.getByText('first try away', { exact: false }).click();
+  await page.getByRole('button', { name: /^Alternatives for the word/ }).click();
+  await page.keyboard.type('quickly');
+  await expect(tour).toContainText('3 of 5');
+  await page.keyboard.press('Escape');
+  await tour.getByRole('button', { name: 'Skip the tour' }).click();
+  await expect(tour).toBeHidden();
+  // Seen once: not shown again, but ? brings it back.
+  await page.reload();
+  await expect(welcome).toBeHidden();
+  await page.getByRole('button', { name: /Welcome and tour/ }).click();
+  await expect(welcome).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(welcome).toBeHidden();
 });
