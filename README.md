@@ -22,7 +22,7 @@ A pairing partner for your writing, as in [pair programming](https://martinfowle
 | Your writing: every piece and moment on one line; sign in | Ctrl+Shift+H, or the button by the word count |
 | Save / open (one Markdown file) | Ctrl+S / Ctrl+O |
 
-Every shortcut can be changed in the shortcuts sheet (the ⌨ icon), which also explains the colours: green kept, amber undecided, red rejected.
+Press ? (when you're not typing in the text) or Ctrl+? anywhere for the list of shortcuts. Every shortcut can be changed in the shortcuts sheet (the ⌨ icon), which also explains the colours: green kept, amber undecided, red rejected.
 
 Your writing never leaves your browser and your files. A piece is one Markdown file: the piece as it reads, then Overflow, then a `write_on` comment holding the alternatives and ghosts.
 
