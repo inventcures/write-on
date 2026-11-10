@@ -1,5 +1,11 @@
 {
   "$schema": "https://railway.com/railway.schema.json",
-  "build": { "buildCommand": "npm ci && npm run build" },
-  "deploy": { "startCommand": "npm start", "healthcheckPath": "/healthz", "restartPolicyType": "ON_FAILURE" }
+  "build": {
+    "buildCommand": "npm install --include=dev --no-audit --no-fund && npm run build"
+  },
+  "deploy": {
+    "startCommand": "npm start",
+    "healthcheckPath": "/healthz",
+    "restartPolicyType": "ON_FAILURE"
+  }
 }

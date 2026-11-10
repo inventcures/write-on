@@ -331,3 +331,10 @@ tp53: "add user controls - auth, login, history, event log (of ALL your writing)
 
 ### Q51. tp53: the three things wanted in a pairing partner for writing: "fast, performant & most importantly productive (aka assists when nudged, else stays out of your way)".
 - **Answer:** one line on the welcome card, under the pairing paragraph, in their words. The card already says what the editor does; this says what it is for.
+
+## Round 15: deploys from GitHub (2026-11-10)
+
+### Q52. tp53 connected the repo to Railway (deploy when CI is green), and the GitHub build failed: `npm ci` hit `EBUSY: rmdir /app/node_modules/.vite`.
+- **Cause:** Railway's builder mounts a build cache at `node_modules/.vite`, and `npm ci` always deletes `node_modules` first, which it can't do to a mount point. Uploads from the laptop got through because their build had no cache yet. Reproduced here by mounting a directory at that path: `npm ci` fails the same way.
+- **Fix:** the build runs `npm install --include=dev` instead, which installs into the existing `node_modules` without deleting it, so the mount survives. `--include=dev` because building needs TypeScript and Vite, even when the builder sets production mode. The lockfile still pins every version.
+- **Also:** the repo had no CI, so "wait for CI" had nothing to wait for. A GitHub Actions workflow now typechecks and runs the unit and browser tests on every push and PR.
