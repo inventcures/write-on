@@ -152,6 +152,7 @@ test('a first visit explains itself and the tour waits for each step', async ({ 
   await expect(welcome).toContainText('Alternatives');
   await expect(welcome).toContainText('Ghost');
   await expect(welcome).toContainText('Overflow');
+  await expect(welcome.getByRole('link', { name: 'pair programming' })).toHaveAttribute('href', /Pair_programming/);
   await welcome.getByRole('button', { name: /Show me how/ }).click();
   await expect(welcome).toBeHidden();
   await expect(page.locator('body')).not.toHaveClass(/read/);

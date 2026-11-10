@@ -108,6 +108,18 @@ export class Onboarding {
       'welcome-lede',
       'An editor for thinking on the page. Instead of deleting your first try, keep it: any word, sentence or paragraph can hold other ways of saying it, and you flip between them in place until one sounds like you.',
     );
+    // tp53: a pairing partner for writing, as in pair programming. Kept to two lines.
+    const pair = el('p', 'welcome-pair');
+    const link = document.createElement('a');
+    link.href = 'https://en.wikipedia.org/wiki/Pair_programming';
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent = 'pair programming';
+    pair.append(
+      'Think of it as a pairing partner for your writing, like ',
+      link,
+      ': someone beside you who keeps you on track, helps when you ask, and otherwise gets out of your way. Writing is thinking; Write_On never writes for you.',
+    );
     const video = el('div', 'welcome-video');
     video.hidden = true;
     void fetch(EXPLAINER_URL, { method: 'HEAD' })
@@ -155,7 +167,7 @@ export class Onboarding {
     actions.append(tour, write);
     const fine = el('p', 'welcome-fine', 'Everything you write stays in this browser. Press ? at the top right to see this again.');
 
-    box.append(h, lede, video, ideas, actions, fine);
+    box.append(h, lede, pair, video, ideas, actions, fine);
     backdrop.append(box);
     backdrop.addEventListener('mousedown', (e) => {
       if (e.target === backdrop) this.closeWelcome();
