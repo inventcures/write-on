@@ -1,6 +1,7 @@
 // Machine alternatives for a passage, from Gemini (ADR-0007). Runs only on the
-// server: the key never reaches the page. It is off unless both a key and an
-// access code are set, so a public URL can't spend the key for strangers.
+// server: the key never reaches the page. Open to every visitor on the site
+// owner's key unless WRITE_ON_ACCESS_CODE is set (ADR-0011), held back by
+// per-caller and daily caps, with the spend counted and the owner emailed as it grows.
 import { timingSafeEqual } from 'node:crypto';
 
 const GRAINS = new Set(['word', 'sentence', 'paragraph']);
@@ -12,7 +13,7 @@ const ALL_PER_DAY = 500;
 export function aiConfig(env) {
   const key = env.GEMINI_API_KEY || env.GOOGLE_API_KEY || '';
   const code = env.WRITE_ON_ACCESS_CODE || '';
-  return { key, code, model: env.GEMINI_MODEL || 'gemini-3.8-flash', enabled: Boolean(key && code) };
+  return { key, code, model: env.GEMINI_MODEL || 'gemini-3.8-flash', enabled: Boolean(key) };
 }
 
 function sameCode(given, wanted) {
@@ -61,12 +62,13 @@ function clip(s, n, fromEnd) {
 
 /**
  * Handle POST /api/suggest. Returns { status, body }.
- * deps: { env, fetch, ip, now, limit }.
+ * deps: { env, fetch, ip, now, limit, usage? }.
  */
 export async function suggest(input, headers, deps) {
   const cfg = aiConfig(deps.env);
   if (!cfg.enabled) return { status: 503, body: { error: 'Suggestions are not switched on for this site.' } };
-  if (!sameCode(headers['x-write-on-code'], cfg.code)) return { status: 401, body: { error: 'That access code isn’t right.' } };
+  // The access code is optional: set, it keeps suggestions to people who know it.
+  if (cfg.code && !sameCode(headers['x-write-on-code'], cfg.code)) return { status: 401, body: { error: 'That access code isn’t right.' } };
   const text = typeof input?.text === 'string' ? input.text.trim() : '';
   const grain = input?.grain;
   if (!text || text.length > MAX_TEXT || !GRAINS.has(grain)) return { status: 400, body: { error: 'Select a word, sentence or paragraph first.' } };
@@ -108,6 +110,8 @@ export async function suggest(input, headers, deps) {
   }
   try {
     const data = await res.json();
+    // Count what this call cost before anything else can go wrong with it.
+    await deps.usage?.add(data?.usageMetadata);
     const raw = data?.candidates?.[0]?.content?.parts?.map((p) => p.text ?? '').join('') ?? '';
     const list = JSON.parse(raw).alternatives;
     const alternatives = (Array.isArray(list) ? list : [])

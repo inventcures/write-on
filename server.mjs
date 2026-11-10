@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { aiConfig, rateLimiter, suggest } from './server/suggest.mjs';
 import { apiLimits, handleApi } from './server/api.mjs';
 import { googleConfig } from './server/google.mjs';
+import { createUsage, resendSender, usageConfig } from './server/usage.mjs';
 import { openStore } from './server/store.mjs';
 
 const root = join(fileURLToPath(new URL('.', import.meta.url)), 'dist');
@@ -28,6 +29,8 @@ const types = {
 };
 
 const limit = rateLimiter();
+const usageCfg = usageConfig(process.env);
+const usage = createUsage({ dir: process.env.DATA_DIR || null, cfg: usageCfg, send: resendSender(usageCfg) });
 // Accounts are on only when DATA_DIR points at lasting storage (a Railway
 // volume); without it, accounts would vanish on every deploy (ADR-0008).
 const store = process.env.DATA_DIR ? await openStore(process.env.DATA_DIR) : null;
@@ -72,7 +75,8 @@ createServer(async (req, res) => {
     return;
   }
   if (url.pathname === '/api/ai') {
-    json(res, 200, { enabled: aiConfig(process.env).enabled });
+    const ai = aiConfig(process.env);
+    json(res, 200, { enabled: ai.enabled, code: Boolean(ai.code) });
     return;
   }
   if (url.pathname.startsWith('/api/') && url.pathname !== '/api/suggest' && url.pathname !== '/api/ai') {
@@ -99,7 +103,7 @@ createServer(async (req, res) => {
     if (req.method !== 'POST') return json(res, 405, { error: 'POST only' });
     const input = await readBody(req, 20_000);
     const ip = String(req.headers['x-real-ip'] ?? req.headers['x-forwarded-for'] ?? req.socket.remoteAddress ?? '').split(',')[0].trim();
-    const out = await suggest(input, req.headers, { env: process.env, fetch, ip, now: Date.now(), limit });
+    const out = await suggest(input, req.headers, { env: process.env, fetch, ip, now: Date.now(), limit, usage });
     json(res, out.status, out.body);
     return;
   }

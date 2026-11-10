@@ -319,3 +319,12 @@ tp53: "add user controls - auth, login, history, event log (of ALL your writing)
 
 ### Q48. Do recordings go to the account?
 - **Answer:** not yet. They stay in this browser, even when signed in. Voices are more personal than text and much bigger. If tp53 wants them in the account, that would be an explicit opt-in.
+
+## Round 14: suggestions for everyone, and a $5 email (2026-11-10)
+
+### Q49. tp53: "what is the access code? did u mean BYOK? ... let them use MY gemini api key, but send me a brief email when cumulative usage goes beyond 5$". Then: "let the passphrase be tp53".
+- **Reading:** the two messages pull opposite ways, open it to everyone or keep a phrase. Both are served by making the code optional. Set, the page asks for it; unset, everyone gets suggestions. tp53 switches between the two with one Railway variable, no deploy. ADR-0011.
+- **Not BYOK:** the access code was a shared phrase that kept strangers off tp53's key. It never was a key.
+
+### Q50. How does the $5 email work?
+- **Answer:** the server prices every Gemini reply from its own token counts, keeps a running total on the volume, and emails through Resend each time the total passes another $5. The address and the Resend key are Railway variables only. It's an estimate; a Google Cloud budget alert is the exact one.

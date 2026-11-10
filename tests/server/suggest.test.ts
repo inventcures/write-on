@@ -16,12 +16,25 @@ const deps = (over: Record<string, unknown> = {}) => ({ env, fetch: gemini(['nai
 const input = { text: 'thumbtack', grain: 'word', before: 'Pin it like a ', after: ' to the wall.' };
 
 describe('suggest', () => {
-  it('is off without a key or without an access code', async () => {
-    expect((await suggest(input, ok, deps({ env: { GEMINI_API_KEY: 'k' } }))).status).toBe(503);
+  it('is off without a key', async () => {
     expect((await suggest(input, ok, deps({ env: { WRITE_ON_ACCESS_CODE: 'c' } }))).status).toBe(503);
   });
 
-  it('needs the right access code', async () => {
+  it('is open to everyone on the key when no access code is set', async () => {
+    expect((await suggest(input, {}, deps({ env: { GEMINI_API_KEY: 'k' } }))).status).toBe(200);
+  });
+
+  it('counts what each call cost', async () => {
+    const add = vi.fn(async () => undefined);
+    const fetch = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ usageMetadata: { promptTokenCount: 900 }, candidates: [{ content: { parts: [{ text: '{"alternatives":["nail"]}' }] } }] }),
+    }));
+    await suggest(input, ok, deps({ fetch, usage: { add } }));
+    expect(add).toHaveBeenCalledWith({ promptTokenCount: 900 });
+  });
+
+  it('needs the right access code when one is set', async () => {
     expect((await suggest(input, { 'x-write-on-code': 'nope' }, deps())).status).toBe(401);
     expect((await suggest(input, {}, deps())).status).toBe(401);
   });

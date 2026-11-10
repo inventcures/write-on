@@ -47,13 +47,18 @@ The idea and interaction design are Jason Fried's; this is an independent reprod
 
 ## Machine suggestions (optional)
 
-Off unless the server has both variables set (ADR-0007):
+On when the server has a Gemini key (ADR-0007, ADR-0011). Everyone on the site uses that key, within 30 requests an hour each and 500 a day in all.
 
 | Variable | What |
 | --- | --- |
 | `GEMINI_API_KEY` | Google AI Studio key. Server-side only; never reaches the page. |
-| `WRITE_ON_ACCESS_CODE` | A phrase you choose. The page asks for it once, so strangers can't spend your key. |
+| `WRITE_ON_ACCESS_CODE` | Optional. If set, the page asks for this phrase once, and only people who know it get suggestions. |
 | `GEMINI_MODEL` | Optional, default `gemini-3.8-flash`. |
+| `ALERT_EMAIL`, `RESEND_API_KEY` | Optional. An email to this address each time the estimated Gemini spend passes another $5, sent through [Resend](https://resend.com). |
+| `SPEND_ALERT_USD` | Optional, default `5`: the step between emails. |
+| `GEMINI_USD_PER_M_IN`, `GEMINI_USD_PER_M_OUT` | Optional, default `0.5` and `3`: the prices per million tokens used for the estimate. Set them to the model's current prices. |
+
+The spend estimate lives in `DATA_DIR/gemini-usage.json`. Without `DATA_DIR`, it restarts from zero on every deploy.
 
 Limits: 30 requests an hour per caller, 500 a day in all.
 
