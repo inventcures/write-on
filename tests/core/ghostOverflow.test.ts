@@ -102,3 +102,15 @@ describe('paragraph groups', () => {
     expect(overflowText(state)).toBe('');
   });
 });
+
+describe('stashing a paragraph group', () => {
+  it('keeps its versions when it goes to Overflow and comes back', () => {
+    let state = select(piece(two), 'Second paragraph here.');
+    state = run(state, createGroup(targetForSelection(state)!, textVariant('A shorter second.')));
+    state = run(caret(state, 'shorter'), stash);
+    expect(overflowText(state)).toBe('A shorter second.');
+    state = run(caret(state, 'shorter', 0, { inOverflow: true }), useFromOverflow);
+    const id = groupAt(state.doc, find(state, 'shorter')[0])!;
+    expect(findGroup(state.doc, id)!.attrs.variants.map(variantText)).toEqual(['Second paragraph here.', 'A shorter second.']);
+  });
+});

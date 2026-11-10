@@ -6,7 +6,13 @@ import { KIND_FAMILY, mapToNow, replay, type PieceHistory } from '../core/histor
 import { overflowStart } from '../core/piece';
 import { schema } from '../core/schema';
 
-const FAMILY_LABEL = { writing: 'Writing', cutting: 'Cutting', alternatives: 'Alternatives', ghost: 'Ghost', overflow: 'Overflow' } as const;
+const FAMILY_LABEL = {
+  writing: 'Writing (kept)',
+  cutting: 'Cutting (rejected)',
+  alternatives: 'Alternatives',
+  ghost: 'Ghost (undecided)',
+  overflow: 'Overflow (undecided)',
+} as const;
 const SPEEDS = [1, 4, 16];
 const PAUSE_GAP_MS = 10 * 60 * 1000;
 
@@ -192,9 +198,15 @@ export class Timeline {
       const x = i * this.zoom;
       const selected = i === this.index;
       g.fillStyle = color(family);
-      g.globalAlpha = selected ? 1 : 0.7;
+      // Second cues besides colour: ghosts are faded, Overflow is striped.
+      g.globalAlpha = (selected ? 1 : 0.7) * (family === 'ghost' ? 0.55 : 1);
       const h = selected ? 34 : 22;
-      g.fillRect(x, (height - h) / 2, w, h);
+      const y = (height - h) / 2;
+      g.fillRect(x, y, w, h);
+      if (family === 'overflow') {
+        g.fillStyle = '#050a1c';
+        for (let sy = y + 2; sy < y + h; sy += 5) g.fillRect(x, sy, w, 1.5);
+      }
       const prev = this.history.entries[i - 1];
       if (prev && entry.t - prev.t > PAUSE_GAP_MS) {
         g.globalAlpha = 0.5;

@@ -5,11 +5,15 @@ import { addEvents, isInOverflow, overflowNode, overflowStart, pageCaretKey } fr
 import { schema } from './schema';
 
 /** Append paragraphs (plain strings or inline content) to the end of Overflow. */
-export function appendToOverflow<T extends Transform>(tr: T, items: (string | Fragment)[]): T {
+export function appendToOverflow<T extends Transform>(tr: T, items: (string | Fragment | Node)[]): T {
   const paragraphs = items
-    .map((item) => (typeof item === 'string' ? (item ? Fragment.from(schema.text(item)) : Fragment.empty) : item))
-    .filter((content) => content.size > 0)
-    .map((content) => schema.nodes.paragraph.create(null, content));
+    .map((item) => {
+      // A whole block keeps its paragraph group, so its versions travel with it.
+      if (item instanceof Fragment) return schema.nodes.paragraph.create(null, item);
+      if (typeof item === 'string') return schema.nodes.paragraph.create(null, item ? schema.text(item) : null);
+      return schema.nodes.paragraph.create({ alt: item.attrs.alt ?? null }, item.content);
+    })
+    .filter((p) => p.content.size > 0);
   if (paragraphs.length === 0) return tr;
   const overflow = overflowNode(tr.doc);
   const start = overflowStart(tr.doc);
@@ -28,13 +32,13 @@ export const stash: Command = (state, dispatch) => {
   const { selection, doc } = state;
   if (isInOverflow(doc, selection.from)) return false;
   const tr = state.tr;
-  let content: Fragment[];
+  let content: (Fragment | Node)[];
   let text: string;
   if (selection.empty) {
     const $pos = selection.$from;
     if (!$pos.parent.isTextblock || $pos.parent.content.size === 0) return false;
     const block = $pos.parent;
-    content = [block.content];
+    content = [block];
     text = block.textContent;
     if (!dispatch) return true;
     const pageBlocks = doc.childCount - 1;
@@ -73,7 +77,7 @@ export const useFromOverflow: Command = (state, dispatch) => {
   const caret = Math.min(pageCaretKey.getState(state) ?? 0, overflowStart(tr.doc) - 1);
   const $caret = tr.doc.resolve(Math.max(1, caret));
   const insertAt = $caret.depth > 0 ? $caret.after(1) : overflowStart(tr.doc);
-  tr.insert(insertAt, schema.nodes.paragraph.create(null, item.content));
+  tr.insert(insertAt, schema.nodes.paragraph.create(item.attrs, item.content));
   addEvents(tr, [{ kind: 'used', text: item.textContent }]);
   dispatch(tr.scrollIntoView());
   return true;

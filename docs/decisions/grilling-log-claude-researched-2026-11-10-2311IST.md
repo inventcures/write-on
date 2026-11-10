@@ -182,3 +182,23 @@ tp53 asked for "clever diffing" designed from a perception and HCI point of view
 - **A plain caption first.** "Changed ‘close’ to ‘knack’", "Cut 14 words", "Added 2 sentences", "Tried another version of this sentence", "Ghosted a sentence", "Moved a paragraph to Overflow". The caption answers "what happened here?" before the eye parses any marks.
 - **Motion for change, focus for place.** Change blindness means people miss static differences between two pictures; during replay, added words fade in and cut words fade out so the eye catches each change. The rest of the piece dims (as with the alternatives panel) and the view scrolls to the passage, so there's never a hunt.
 - **Typing is grouped into moments.** A burst of typing is one moment, so the timeline reads as a sequence of decisions, not keystrokes.
+
+### Q29. Keybindings: fixed or customisable?
+
+tp53: "default sensible keybinds, but allow the user to customise those through a simple visual UI". **Answer: one table of actions with Write_On's Control-key defaults; the shortcuts sheet is the editor.** Click a binding, press the keys, done. If those keys belonged to another action, the sheet says so and that action becomes "not set" (rather than silently swapping, which surprises people). Reset per row and reset all. Stored in this browser only. The hover keys (arrows and Delete over a group), undo/redo and bold/italic stay fixed: they are part of editing itself, and changing them would break muscle memory from every other editor. Button tooltips and the right-click menu always show the current keys.
+
+A bug found while testing this: a shortcut pressed right after a click could act on the previous selection, because the browser reports the new selection a moment later. Shortcuts now read the latest selection before acting.
+
+### Q30. What do colours mean?
+
+tp53 set the core: **red = rejected or "bad", amber = unsure or "mid", green = accepted or "good"**, and invited more colours and meanings. The vocabulary, used everywhere (editor, panels, timeline, replay):
+
+| Colour | Meaning | Second cue (so it reads without colour) |
+| --- | --- | --- |
+| Green | Kept: words added that stay, the version chosen, text brought back | Solid highlight |
+| Red | Rejected: words cut, versions dropped | Hand-drawn strike-through |
+| Amber | Undecided: ghosted text, Overflow, versions held but not showing | Faded (ghost) or striped/dashed (Overflow) |
+| Violet / rose / copper | Which grain an alternative is at: word / sentence / paragraph (Fried's marks) | Thin underline / lower underline / margin bar |
+| Electric blue | Reserved for machine-suggested text (Phase 1) | Robot mark and a label |
+
+Why: a colour that always means one thing becomes a scaffold the writer reads without thinking (like traffic lights, which tp53 chose on purpose). Judgement colours (green, amber, red) are kept apart from location colours (the grain marks), so "this is a sentence alternative" never reads as "this is bad". Machine text gets a colour nothing else uses, following iA Writer's finding that a quiet grey for AI text was "too quiet". The shortcuts sheet carries a colour key.

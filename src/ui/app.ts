@@ -3,7 +3,7 @@ import { redo, undo } from 'prosemirror-history';
 import { InputRule, inputRules } from 'prosemirror-inputrules';
 import { keymap } from 'prosemirror-keymap';
 import type { Node } from 'prosemirror-model';
-import { TextSelection, type Command } from 'prosemirror-state';
+import { Plugin, TextSelection, type Command } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { toggleMark, setBlockType } from 'prosemirror-commands';
 import { createEditorState } from '../core/editor';
@@ -20,27 +20,13 @@ import { record, replay, startHistory, type PieceHistory } from '../core/history
 import { Timeline } from './timeline';
 import { explode } from './explode';
 import * as files from './files';
-import { closeMenu, closeSheet, isSheetOpen, notify, shortcutsTable, showMenu, showSheet } from './menus';
+import { Keybindings, keybindingsEditor, pretty, type ActionId } from './keys';
+import { colourKey } from './colours';
+import { closeMenu, closeSheet, isSheetOpen, notify, showMenu, showSheet } from './menus';
 import { drawMarks, groupRect } from './overlay';
 import { isMuted, setMuted, tick } from './sound';
 import { look, lookKey, OverflowView, pasteFreshIds, setLook } from './viewPlugins';
 
-export const SHORTCUTS: [string, string][] = [
-  ['Read mode: tools in or out', 'Ctrl+Shift+R'],
-  ['Alternatives for selection or word', 'Ctrl+Shift+A'],
-  ['Flip the hovered group', 'hover + ← →'],
-  ['Flip the group at the caret', 'Ctrl+[  Ctrl+]'],
-  ['Delete the showing variant', 'hover + Delete'],
-  ['Ghost it / Revive it', 'Ctrl+/'],
-  ['Stash in Overflow', 'Ctrl+Shift+X'],
-  ['Overflow panel', 'Ctrl+Shift+D'],
-  ['Use in the page (in Overflow)', 'Ctrl+Return'],
-  ['Timeline: replay and revisit every moment', 'Ctrl+Shift+L'],
-  ['Source view (the raw file)', 'Ctrl+U'],
-  ['Save, Open', 'Ctrl+S  Ctrl+O'],
-  ['Undo, Redo', 'Ctrl+Z  Ctrl+Shift+Z'],
-  ['Bold, Italic', 'Ctrl+B  Ctrl+I'],
-];
 
 const markdownRules = inputRules({
   rules: [
@@ -87,29 +73,32 @@ export function startApp(root: HTMLElement): void {
   const fadeBottom = document.createElement('div');
   fadeBottom.className = 'fade bottom';
 
-  const button = (label: string, title: string, onClick: () => void, cls = 'tool') => {
+  const keys = new Keybindings();
+  const titled: [HTMLElement, ActionId, string][] = [];
+  const button = (label: string, title: string, onClick: () => void, cls = 'tool', action?: ActionId) => {
     const b = document.createElement('button');
     b.type = 'button';
     b.className = cls;
     b.textContent = label;
-    b.title = title;
+    b.title = action ? `${title} (${pretty(keys.combo(action))})` : title;
     b.setAttribute('aria-label', title);
     b.onclick = onClick;
+    if (action) titled.push([b, action, title]);
     return b;
   };
 
-  const count = button('', 'Read mode: tools in or out (Ctrl+Shift+R)', () => toggleRead(), 'count');
+  const count = button('', 'Read mode: tools in or out', () => toggleRead(), 'count', 'read');
   const marksToggle = button('⋯', 'Show or hide alternative marks', () => {
     body.classList.toggle('marks-off');
     marksToggle.setAttribute('aria-pressed', String(!body.classList.contains('marks-off')));
   });
   marksToggle.setAttribute('aria-pressed', 'true');
-  const sourceBtn = button('M↓', 'Source view (Ctrl+U)', () => showSource());
+  const sourceBtn = button('M↓', 'Source view', () => showSource(), 'tool', 'source');
   const soundBtn = button(isMuted() ? '♪̸' : '♪', 'Sound on or off', () => {
     setMuted(!isMuted());
     soundBtn.textContent = isMuted() ? '♪̸' : '♪';
   });
-  const keysBtn = button('⌨', 'Keyboard shortcuts', () => showShortcuts());
+  const keysBtn = button('⌨', 'Shortcuts and colours: change your keys here', () => showShortcuts());
   const top = document.createElement('header');
   top.className = 'chrome top';
   const center = document.createElement('div');
@@ -125,14 +114,14 @@ export function startApp(root: HTMLElement): void {
   const left = document.createElement('div');
   left.className = 'group';
   left.append(
-    button('Save', 'Save (Ctrl+S)', () => void saveFile()),
-    button('Open', 'Open (Ctrl+O)', () => void openFile()),
+    button('Save', 'Save', () => void saveFile(), 'tool', 'save'),
+    button('Open', 'Open', () => void openFile(), 'tool', 'open'),
     button('New', 'New piece', () => newPiece()),
     button('Export', 'Export clean Markdown: no ghosts, no Overflow', () => exportClean()),
-    button('Timeline', 'Timeline: replay and revisit every moment (Ctrl+Shift+L)', () => openTimeline()),
+    button('Timeline', 'Timeline: replay and revisit every moment', () => openTimeline(), 'tool', 'timeline'),
     button('Log', 'Export the event log of your choices', () => void exportLog()),
   );
-  const xyz = button('XYZ', 'Overflow (Ctrl+Shift+D)', () => toggleOverflow(), 'tool xyz');
+  const xyz = button('XYZ', 'Overflow', () => toggleOverflow(), 'tool xyz', 'overflow');
   bottom.append(left, xyz);
 
   root.append(page, fadeTop, fadeBottom, top, bottom);
@@ -158,8 +147,11 @@ export function startApp(root: HTMLElement): void {
     'Shift-Ctrl-0': setBlockType(schema.nodes.paragraph),
   });
 
+  let editorShortcuts: (e: KeyboardEvent) => boolean = () => false;
+  const shortcutPlugin = new Plugin({ props: { handleKeyDown: (_view, e) => editorShortcuts(e) } });
+
   const view: EditorView = new EditorView(host, {
-    state: createEditorState(withId(initial), [markdownRules, editorKeys, keymap(baseKeymap), look, pasteFreshIds]),
+    state: createEditorState(withId(initial), [shortcutPlugin, markdownRules, editorKeys, keymap(baseKeymap), look, pasteFreshIds]),
     nodeViews: { overflow: () => new OverflowView() },
     attributes: { spellcheck: 'true', 'aria-label': 'Your piece' },
     dispatchTransaction(tr) {
@@ -362,7 +354,14 @@ export function startApp(root: HTMLElement): void {
   }
 
   function showShortcuts(): void {
-    showSheet('Shortcuts', shortcutsTable(SHORTCUTS), () => view.focus());
+    const body = document.createElement('div');
+    body.append(keybindingsEditor(keys, refreshTitles), colourKey());
+    showSheet('Shortcuts and colours', body, () => view.focus());
+  }
+
+  /** Keep button tooltips and the context menu in step with custom keys. */
+  function refreshTitles(): void {
+    for (const [el, id, label] of titled) el.title = `${label} (${pretty(keys.combo(id))})`;
   }
 
   // Pointer: hover tint and arrow ownership.
@@ -391,22 +390,66 @@ export function startApp(root: HTMLElement): void {
     const hit = view.posAtCoords({ left: e.clientX, top: e.clientY });
     if (hit && view.state.selection.empty) view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, hit.pos)));
     showMenu(e.clientX, e.clientY, [
-      { label: 'Alternatives for selection', keys: 'Ctrl+Shift+A', run: openAlternatives },
-      { label: inGhost ? 'Revive it' : 'Ghost it', keys: 'Ctrl+/', run: ghost },
-      { label: 'Stash this in Overflow', keys: 'Ctrl+Shift+X', run: doStash },
+      { label: 'Alternatives for selection', keys: pretty(keys.combo('alternatives')), run: openAlternatives },
+      { label: inGhost ? 'Revive it' : 'Ghost it', keys: pretty(keys.combo('ghost')), run: ghost },
+      { label: 'Stash this in Overflow', keys: pretty(keys.combo('stash')), run: doStash },
     ]);
   });
   window.addEventListener('mousedown', (e) => {
     if (!(e.target as HTMLElement).closest('.menu')) closeMenu();
   });
 
-  // Keyboard: Write_On uses Control on every platform.
+  // Keyboard. Shortcuts come from the keybindings table. Inside the editor they
+  // run from ProseMirror's own key handler, after it has read the latest
+  // selection from the page; elsewhere (panels, chrome) from the window.
+  function runShortcut(e: KeyboardEvent, inEditor: boolean): boolean {
+    const action = keys.match(e);
+    // The browser reports a fresh click or double-click selection a moment
+    // later (selectionchange); read it now so the shortcut acts where you clicked.
+    if (action && inEditor) (view as unknown as { domObserver?: { flush(): void } }).domObserver?.flush();
+    const inOverflow = inEditor && isInOverflow(view.state.doc, view.state.selection.from);
+    const caretGroup = () => (inEditor ? groupAt(view.state.doc, view.state.selection.head) : null);
+    switch (action) {
+      case 'read': toggleRead(); return true;
+      case 'alternatives': openAlternatives(); return true;
+      case 'overflow': toggleOverflow(); return true;
+      case 'timeline': openTimeline(); return true;
+      case 'source': showSource(); return true;
+      case 'save': void saveFile(); return true;
+      case 'open': void openFile(); return true;
+      case 'ghost': if (!inEditor) return false; ghost(); return true;
+      case 'stash': if (!inEditor) return false; doStash(); return true;
+      case 'use': return inOverflow ? (exec(useFromOverflow), true) : false;
+      case 'flipNext':
+      case 'flipPrev': {
+        const id = caretGroup();
+        if (!id) return false;
+        flipGroup(id, action === 'flipNext' ? 1 : -1);
+        return true;
+      }
+    }
+    if (!inEditor || e.ctrlKey || e.metaKey || e.altKey) return false;
+    const hovered = lookKey.getState(view.state)?.hovered;
+    if (mode === 'pointer' && hovered && !e.shiftKey) {
+      if (e.key === 'ArrowRight') return flipGroup(hovered, 1), true;
+      if (e.key === 'ArrowLeft') return flipGroup(hovered, -1), true;
+      if (e.key === 'Delete' || e.key === 'Backspace') return deleteVariant(hovered), true;
+    }
+    if (!['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) {
+      mode = 'caret';
+      flipSession = null;
+    }
+    return false;
+  }
+  editorShortcuts = (e) => runShortcut(e, true);
+
   window.addEventListener(
     'keydown',
     (e) => {
       if (timeline) return;
       if (isSheetOpen()) {
-        if (e.key === 'Escape' || (e.ctrlKey && e.code === 'KeyU')) {
+        if (document.querySelector('.key-btn.capturing')) return;
+        if (e.key === 'Escape' || keys.match(e) === 'source') {
           e.preventDefault();
           closeSheet();
         }
@@ -415,49 +458,14 @@ export function startApp(root: HTMLElement): void {
       if (e.key === 'Escape') {
         closeMenu();
         if (panel.isOpen) panel.close();
-        return;
-      }
-      const ctrl = e.ctrlKey && !e.metaKey && !e.altKey;
-      const inEditor = view.dom.contains(document.activeElement);
-      const handle = (fn: () => void) => {
-        e.preventDefault();
-        e.stopPropagation();
-        fn();
-      };
-      if (ctrl && e.shiftKey) {
-        if (e.code === 'KeyR') return handle(toggleRead);
-        if (e.code === 'KeyA') return handle(openAlternatives);
-        if (e.code === 'KeyX' && inEditor) return handle(doStash);
-        if (e.code === 'KeyD') return handle(toggleOverflow);
-        if (e.code === 'KeyL') return handle(openTimeline);
-        return;
-      }
-      if (ctrl) {
-        if (e.code === 'Slash' && inEditor) return handle(ghost);
-        if (e.code === 'KeyS') return handle(() => void saveFile());
-        if (e.code === 'KeyO') return handle(() => void openFile());
-        if (e.code === 'KeyU') return handle(showSource);
-        if (e.key === 'Enter' && inEditor && isInOverflow(view.state.doc, view.state.selection.from)) return handle(() => exec(useFromOverflow));
-        if ((e.code === 'BracketLeft' || e.code === 'BracketRight') && inEditor) {
-          const id = groupAt(view.state.doc, view.state.selection.head);
-          if (id) return handle(() => flipGroup(id, e.code === 'BracketRight' ? 1 : -1));
-        }
-        return;
-      }
-      if (!inEditor || e.metaKey || e.altKey) return;
-      const hovered = lookKey.getState(view.state)?.hovered;
-      if (mode === 'pointer' && hovered && !e.shiftKey) {
-        if (e.key === 'ArrowRight') return handle(() => flipGroup(hovered, 1));
-        if (e.key === 'ArrowLeft') return handle(() => flipGroup(hovered, -1));
-        if (e.key === 'Delete' || e.key === 'Backspace') return handle(() => deleteVariant(hovered));
-      }
-      if (!['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) {
-        mode = 'caret';
-        flipSession = null;
       }
     },
     true,
   );
+  window.addEventListener('keydown', (e) => {
+    if (timeline || isSheetOpen() || e.defaultPrevented || view.dom.contains(e.target as globalThis.Node)) return;
+    if (runShortcut(e, false)) e.preventDefault();
+  });
 
   window.addEventListener('resize', () => requestAnimationFrame(redraw));
   
