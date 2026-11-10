@@ -6,7 +6,7 @@
 import type { EditEvent } from '../core/piece';
 
 const SEEN = 'write-on:welcomed';
-/** Drop the explainer at public/explainer.mp4 and the welcome card shows it. */
+/** Drop the explainer at public/explainer.mp4 (with explainer.jpg poster and explainer.vtt captions) and the welcome card shows it. */
 export const EXPLAINER_URL = '/explainer.mp4';
 
 export function hasBeenWelcomed(): boolean {
@@ -117,6 +117,13 @@ export class Onboarding {
         v.src = EXPLAINER_URL;
         v.controls = true;
         v.preload = 'metadata';
+        v.poster = EXPLAINER_URL.replace(/\.mp4$/, '.jpg');
+        const captions = document.createElement('track');
+        captions.kind = 'captions';
+        captions.srclang = 'en';
+        captions.label = 'English';
+        captions.src = EXPLAINER_URL.replace(/\.mp4$/, '.vtt');
+        v.append(captions);
         v.setAttribute('aria-label', 'Explainer video');
         video.append(v);
         video.hidden = false;

@@ -18,6 +18,10 @@ const types = {
   '.json': 'application/json',
   '.ico': 'image/x-icon',
   '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.mp4': 'video/mp4',
+  '.vtt': 'text/vtt; charset=utf-8',
+  '.webm': 'video/webm',
 };
 
 const limit = rateLimiter();
@@ -79,11 +83,29 @@ createServer(async (req, res) => {
     file = join(root, 'index.html');
   }
   const ext = extname(file);
-  res.writeHead(200, {
+  const headers = {
     'content-type': types[ext] ?? 'application/octet-stream',
     'cache-control': file.includes(`${join(root, 'assets')}`) ? 'public, max-age=31536000, immutable' : 'no-cache',
     'x-content-type-options': 'nosniff',
     'referrer-policy': 'no-referrer',
-  });
+    'accept-ranges': 'bytes',
+  };
+  const { size } = await stat(file);
+  // Byte ranges, so video can seek (Safari won't play without them).
+  const range = /^bytes=(\d*)-(\d*)$/.exec(String(req.headers.range ?? ''));
+  if (range && (range[1] || range[2])) {
+    let start = range[1] ? Number(range[1]) : Math.max(0, size - Number(range[2]));
+    let end = range[1] && range[2] ? Math.min(Number(range[2]), size - 1) : size - 1;
+    if (start > end || start >= size) {
+      res.writeHead(416, { 'content-range': `bytes */${size}` }).end();
+      return;
+    }
+    res.writeHead(206, { ...headers, 'content-range': `bytes ${start}-${end}/${size}`, 'content-length': end - start + 1 });
+    if (req.method === 'HEAD') return res.end();
+    createReadStream(file, { start, end }).pipe(res);
+    return;
+  }
+  res.writeHead(200, { ...headers, 'content-length': size });
+  if (req.method === 'HEAD') return res.end();
   createReadStream(file).pipe(res);
 }).listen(port, () => console.log(`write-on listening on ${port}`));
