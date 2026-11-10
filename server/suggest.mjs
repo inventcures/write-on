@@ -12,7 +12,7 @@ const ALL_PER_DAY = 500;
 export function aiConfig(env) {
   const key = env.GEMINI_API_KEY || env.GOOGLE_API_KEY || '';
   const code = env.WRITE_ON_ACCESS_CODE || '';
-  return { key, code, model: env.GEMINI_MODEL || 'gemini-2.5-flash', enabled: Boolean(key && code) };
+  return { key, code, model: env.GEMINI_MODEL || 'gemini-3.8-flash', enabled: Boolean(key && code) };
 }
 
 function sameCode(given, wanted) {

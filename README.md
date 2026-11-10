@@ -47,6 +47,6 @@ Off unless the server has both variables set (ADR-0007):
 | --- | --- |
 | `GEMINI_API_KEY` | Google AI Studio key. Server-side only; never reaches the page. |
 | `WRITE_ON_ACCESS_CODE` | A phrase you choose. The page asks for it once, so strangers can't spend your key. |
-| `GEMINI_MODEL` | Optional, default `gemini-2.5-flash`. |
+| `GEMINI_MODEL` | Optional, default `gemini-3.8-flash`. |
 
 Limits: 30 requests an hour per caller, 500 a day in all.

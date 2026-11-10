@@ -45,7 +45,7 @@ describe('suggest', () => {
     const fetch = gemini(['nail']);
     await suggest(input, ok, deps({ fetch }));
     const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit & { headers: Record<string, string> }];
-    expect(url).toMatch(/^https:\/\/generativelanguage\.googleapis\.com\/v1beta\/models\/gemini-2\.5-flash:generateContent$/);
+    expect(url).toMatch(/^https:\/\/generativelanguage\.googleapis\.com\/v1beta\/models\/gemini-3\.8-flash:generateContent$/);
     expect(init.headers['x-goog-api-key']).toBe('k-123');
     expect(String(init.body)).not.toContain('k-123');
     expect(String(init.body)).toContain('thumbtack');
