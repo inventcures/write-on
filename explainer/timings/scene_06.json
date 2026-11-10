@@ -1,38 +1,38 @@
 {
   "scene": 6,
   "title": "AdaptsToYou",
-  "duration": 46.196,
+  "duration": 45.689,
   "beats": [
     {
       "id": "6.1",
       "kind": "narration",
-      "start": 0.5,
+      "start": 0.417,
       "speech": 7.917,
-      "end": 8.792,
+      "end": 8.65,
       "display_text": "Why does this matter? Because every flip, ghost and stash is a small decision, and your decisions are a trace of how you think."
     },
     {
       "id": "6.2",
       "kind": "formula",
-      "start": 8.792,
+      "start": 8.65,
       "speech": 5.461,
-      "end": 14.921,
+      "end": 14.696,
       "display_text": "If you pick the shorter variant eight times out of ten, that's a pattern, and it belongs to you."
     },
     {
       "id": "6.3",
       "kind": "narration",
-      "start": 14.921,
+      "start": 14.696,
       "speech": 21.778,
-      "end": 37.073,
+      "end": 36.79,
       "display_text": "To be clear about what exists: today, Write-on is the workbench, plus one optional machine helper. Press Ctrl+Shift+G and three suggestions arrive in blue, as alternatives you can flip to. They never replace your words. Next, we plan to learn from your choices and past writing, with quiet nudges that ask questions, and editor personas who critique."
     },
     {
       "id": "6.4",
       "kind": "narration",
-      "start": 37.073,
+      "start": 36.79,
       "speech": 7.916,
-      "end": 45.363,
+      "end": 45.022,
       "display_text": "One thing won't change: it never writes the piece for you. It keeps every option within reach, and learns to ask better questions."
     }
   ]

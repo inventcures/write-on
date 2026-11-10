@@ -1,10 +1,10 @@
 # Fact check: every product claim in the narration
 
-Checked 2026-11-10 against `main` at c8d523b (README.md, GLOSSARY.md, src/ui/colours.ts, src/ui/styles.css, src/ui/onboarding.ts, ADR-0007), and the master spec. Re-checked after PRs #19 to #21 added suggestions, the welcome card and tour, and accounts.
+Checked 2026-11-10 against `main` at c8d523b (README.md, GLOSSARY.md, src/ui/colours.ts, src/ui/styles.css, src/ui/onboarding.ts, ADR-0007), and the master spec. Re-checked after PRs #19 to #21 added suggestions, the welcome card and tour, and accounts. v3 (6:03) replaced beat 1.0 with the author's own voice.
 
 | Beat | Claim | Source |
 | --- | --- | --- |
-| 1.0 | Began on 10 November 2026, the day Fable 5.2 was released; the question of writing more thoughtfully without handing thinking to the machine | The author's own account, dictated in the project thread on 2026-11-10 |
+| Intro | Every line of the 89 s intro (10 November, Fable 5.2, thought partner, writing is thinking, credit to Jason Fried, deep research, @poteto's pstack and unslop, David Perell, Jasmine Sun, Celine Nguyen, open code) | The author's own recording, in their voice; on-screen cards and captions transcribe it (`timings/scene_99_captions.json`) |
 | 2.1 | Idea from Jason Fried's Write_On; "not version control, but alternative control" | Fried's launch post, quoted in README.md and the spec |
 | 2.4 | Caret on a word + Ctrl+Shift+A gives that word variants | README "Use it": "Alternatives for the word at the caret … Ctrl+Shift+A" |
 | 2.5 | Hover and arrow keys flip variants in place | README: "Flip versions: hover and ← →" |

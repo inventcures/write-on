@@ -1,6 +1,6 @@
 # write-on orientation video
 
-A 4:54, 3Blue1Brown-style orientation for new users: what write-on is for, the four ideas behind it (after a short origin: the day Fable 5.2 came out; then alternative control, Ghost and Overflow, the colours and the timeline, the mental model), what to do in your first minute, and what exists today versus what is planned. Animated with Grant Sanderson's [ManimGL](https://github.com/3b1b/manim), narrated with Gemini TTS (voice Sulafat).
+A 6:03, 3Blue1Brown-style orientation for new users. It opens with the author's own 89-second voice note (why write-on exists, credits, what they read), then the narrated orientation (4:34): what write-on is for, the four ideas behind it (alternative control, Ghost and Overflow, the colours and the timeline, the mental model), what to do in your first minute, and what exists today versus what is planned. Animated with Grant Sanderson's [ManimGL](https://github.com/3b1b/manim), narrated with Gemini TTS (voice Sulafat).
 
 The rendered files (`write-on-orientation.mp4`, `.vtt`, `.srt`, poster `.jpg`) are served by the app as `/explainer.*`; they are built here, not stored here. Why each choice was made: [docs/decisions/orientation-video-…](../docs/decisions/orientation-video-claude-researched-2026-11-10-1910UTC.md). Every claim in the narration is checked in [script/fact_check.md](script/fact_check.md).
 

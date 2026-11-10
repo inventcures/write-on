@@ -84,35 +84,7 @@ class Scene01Title(TimedScene):
     scene_number = 1
 
     def construct(self):
-        # Origin: the day Fable 5.2 came out
-        self.at("1.0")
-        date = label("10 November 2026", size=40, color=INK, weight=BOLD).to_edge(UP, buff=0.6)
-        sub0 = label("Anthropic releases Fable 5.2", size=28, color=INK_SOFT).next_to(date, DOWN, buff=0.2)
-        self.play(FadeIn(date, shift=DOWN * 0.2), FadeIn(sub0), run_time=0.8)
-        topics = ["one-shot hardware", "multi-step chemistry", "agents that ship apps", "a game in an hour",
-                  "one-shot hardware, v2", "a lab notebook agent", "chemistry, step by step", "everything, at once"]
-        posts = VGroup()
-        for i, t in enumerate(topics * 2):
-            card = panel(5.2, 0.8, color=INK_FAINT)
-            dot = Dot(radius=0.14, fill_color=[WORD, SENT, PARA, MACHINE][i % 4]).move_to(card.get_left() + RIGHT * 0.4)
-            txt = label(t, size=24, color=INK_SOFT).next_to(dot, RIGHT, buff=0.3)
-            posts.add(VGroup(card, dot, txt))
-        posts.arrange(DOWN, buff=0.2).next_to(sub0, DOWN, buff=0.4).align_to(sub0, ORIGIN)
-        posts.set_x(0)
-        clip_top = sub0.get_bottom()[1] - 0.2
-        posts.add_updater(lambda m: [c.set_opacity(1 if c.get_y() < clip_top else 0) for c in m])
-        self.add(posts)
-        self.at("1.0", 0.15)
-        self.play(posts.animate.shift(UP * 9), run_time=5.5, rate_func=lambda t: smooth(t) ** 0.8)
-        posts.clear_updaters()
-        self.at("1.0", 0.6)
-        q = label("how do you write more, and more thoughtfully,\nwithout handing your thinking to the machine?",
-                  size=38, color=INK, alignment="CENTER")
-        self.play(FadeOut(posts), FadeOut(sub0), FadeOut(date), run_time=0.6)
-        self.play(Write(q), run_time=2.2)
-
         self.at("1.1")
-        self.play(FadeOut(q), run_time=0.5)
         title = page("write-on", size=96)
         w = wave(title["on"], amp=0.06, period=0.3, buff=0.14, width=4)
         sub = label("an orientation", size=34).next_to(title, DOWN, buff=0.7)
@@ -727,3 +699,159 @@ class Scene07Close(TimedScene):
         ).arrange(DOWN, buff=0.4).shift(DOWN * 0.6)
         self.play(LaggedStartMap(FadeIn, credits, shift=UP * 0.15, lag_ratio=0.3), run_time=1.6)
         self.finish()
+
+
+# ---------------------------------------------------------------- Intro: the maker, in their own voice
+class Scene99MakerIntro(TimedScene):
+    """The maker's own recording (about 89 s) opens the video. Cues come from the supercut's transcript."""
+    scene_number = 99
+
+    def card(self, text, color=INK, size=30, dot=None):
+        box = panel(len(text) * size * 0.0105 + 1.2, 0.85, color=INK_FAINT)
+        txt = label(text, size=size, color=color)
+        g = VGroup(box, txt)
+        if dot:
+            d = Dot(radius=0.11, fill_color=dot).move_to(box.get_left() + RIGHT * 0.35)
+            txt.next_to(d, RIGHT, buff=0.25)
+            box.stretch_to_fit_width(txt.get_right()[0] - box.get_left()[0] + 0.4, about_edge=LEFT)
+            g.add(d)
+        return g
+
+    def construct(self):
+        env = self.timing["envelope"]
+        base_y, width = -3.2, 12.0
+        trace = VMobject().set_stroke(SENT, 2.5, opacity=0.8)
+
+        def draw(m):
+            i = int(self.time * 30)
+            window = env[max(0, i - 120): i + 1]
+            if len(window) < 2:
+                window = [0, 0]
+            xs = np.linspace(-width / 2, -width / 2 + width * len(window) / 121, len(window))
+            m.set_points_as_corners([np.array([x, base_y + 0.55 * a, 0]) for x, a in zip(xs, window)])
+
+        trace.add_updater(draw)
+        self.add(trace)
+
+        # Hi, date, Fable 5.2
+        self.at("i.hi")
+        who = VGroup(label("a note from Ashish, who built write-on", size=24, color=INK_SOFT),
+                     label("in their own voice", size=20, color=SENT)).arrange(DOWN, buff=0.12, aligned_edge=LEFT)
+        who.to_corner(UL, buff=0.5)
+        self.play(FadeIn(who, shift=RIGHT * 0.2), run_time=0.8)
+        self.at("i.date")
+        date = label("10 November 2026", size=60, color=INK, weight=BOLD).shift(UP * 0.5)
+        self.play(FadeIn(date, shift=UP * 0.2), run_time=0.8)
+        self.at("i.fable", 0.3)
+        sub = label("Anthropic releases Claude Fable 5.2", size=34, color=INK_SOFT).next_to(date, DOWN, buff=0.35)
+        self.play(FadeIn(sub), run_time=0.7)
+
+        # The question, and the answer
+        self.at("i.what")
+        self.play(FadeOut(VGroup(date, sub)), run_time=0.4)
+        q = label("what can I do that hasn't been done before?", size=40, color=INK)
+        self.play(Write(q), run_time=1.8)
+        self.at("i.partner")
+        self.play(q.animate.scale(0.7).set_opacity(0.4).to_edge(UP, buff=1.6), run_time=0.5)
+        tp = label("a true thought partner, as you write", size=48, color=WORD, weight=BOLD)
+        self.play(FadeIn(tp, shift=UP * 0.2), run_time=0.8)
+
+        # Writing is thinking
+        self.at("i.thinking")
+        self.clear_all_but(trace, who, run_time=0.4)
+        big = label("writing is thinking", size=72, color=INK, weight=BOLD).shift(UP * 0.8)
+        self.play(FadeIn(big, scale=1.05), run_time=0.8)
+        self.at("i.thinking", 0.55)
+        arrow = Arrow(LEFT * 2.5, RIGHT * 2.5).set_stroke(MACHINE, 4).set_fill(MACHINE).next_to(big, DOWN, buff=0.7)
+        out = label("outsource it", size=30, color=MACHINE).next_to(arrow, DOWN, buff=0.15)
+        self.play(GrowArrow(arrow), FadeIn(out), run_time=0.8)
+        self.at("i.atrophy")
+        atro = label("and your thinking atrophies", size=32, color=REJ).next_to(out, DOWN, buff=0.35)
+        self.play(big.animate.set_opacity(0.3).scale(0.92), FadeIn(atro), run_time=1.6)
+
+        # Credit, and where it starts
+        self.at("i.fried")
+        self.clear_all_but(trace, who, run_time=0.4)
+        credit = label("full credit: Jason Fried's Write_On", size=44, color=INK, weight=BOLD).shift(UP * 0.9)
+        self.play(FadeIn(credit, shift=UP * 0.15), run_time=0.8)
+        self.at("i.startpoint")
+        start = Dot(radius=0.14, fill_color=KEPT).move_to(LEFT * 4 + DOWN * 0.6)
+        end = Dot(radius=0.14, fill_color=INK_FAINT).move_to(RIGHT * 4 + DOWN * 0.6)
+        path = DashedLine(start.get_center(), end.get_center()).set_stroke(INK_FAINT, 2)
+        sl = label("the starting point", size=26, color=KEPT).next_to(start, DOWN, buff=0.25)
+        el = label("not the end point", size=26, color=INK_SOFT).next_to(end, DOWN, buff=0.25)
+        self.play(FadeIn(start, scale=0.5), FadeIn(sl), run_time=0.6)
+        self.play(ShowCreation(path), FadeIn(end), FadeIn(el), run_time=1.4)
+
+        # Research, and the people who helped
+        self.at("i.research")
+        self.clear_all_but(trace, who, run_time=0.4)
+        docs = VGroup(*[panel(1.4, 1.8, color=INK_FAINT) for _ in range(5)]).arrange(RIGHT, buff=0.3).shift(UP * 0.6)
+        for d in docs:
+            d.add(*[Line(LEFT * 0.45, RIGHT * 0.45).set_stroke(INK_FAINT, 2).move_to(d.get_center() + UP * (0.5 - 0.25 * k))
+                    for k in range(5)])
+        rl = label("deep research, again with Fable 5.2", size=34, color=INK).next_to(docs, DOWN, buff=0.5)
+        self.play(LaggedStartMap(FadeIn, docs, shift=UP * 0.2, lag_ratio=0.15), FadeIn(rl), run_time=1.4)
+
+        self.at("i.potato")
+        self.clear_all_but(trace, who, run_time=0.4)
+        shout = label("shout-out", size=26, color=INK_SOFT).shift(UP * 1.9)
+        p = label("@poteto", size=54, color=INK, weight=BOLD).next_to(shout, DOWN, buff=0.3)
+        self.play(FadeIn(shout), FadeIn(p, shift=UP * 0.15), run_time=0.8)
+        self.at("i.unslop")
+        chain = VGroup(self.card("pstack, a suite of skills", dot=INK_SOFT),
+                       self.card("its unslop skill", dot=SENT),
+                       self.card("tweaked for my own writing", dot=KEPT)).arrange(RIGHT, buff=0.6).scale(0.9)
+        chain.next_to(p, DOWN, buff=0.9).set_x(0)
+        arrows = VGroup(*[Arrow(chain[k].get_right(), chain[k + 1].get_left(), buff=0.08).set_stroke(INK_FAINT, 3)
+                          .set_fill(INK_FAINT) for k in range(2)])
+        self.play(FadeIn(chain[0], shift=UP * 0.1), run_time=0.6)
+        self.at("i.unslop", 0.45)
+        self.play(GrowArrow(arrows[0]), FadeIn(chain[1], shift=UP * 0.1), run_time=0.6)
+        self.at("i.unslop", 0.7)
+        self.play(GrowArrow(arrows[1]), FadeIn(chain[2], shift=UP * 0.1), run_time=0.6)
+
+        self.at("i.voice")
+        self.clear_all_but(trace, who, run_time=0.4)
+        v1 = label("use LLMs to write better", size=46, color=INK).shift(UP * 0.7)
+        v2 = label("without losing your own voice", size=46, color=SENT, weight=BOLD).next_to(v1, DOWN, buff=0.4)
+        self.play(FadeIn(v1, shift=UP * 0.15), run_time=0.7)
+        self.at("i.voice", 0.55)
+        self.play(FadeIn(v2, shift=UP * 0.15), run_time=0.7)
+
+        # What they read
+        self.at("i.perell")
+        self.clear_all_but(trace, who, run_time=0.4)
+        rh = label("what I've been reading", size=30, color=INK_SOFT).shift(UP * 2.2)
+        self.play(FadeIn(rh), run_time=0.4)
+        items = [("David Perell", "i.perell", 0.3, PARA), ("free time on Substack", "i.substack", 0.2, UND),
+                 ("people I admire", "i.admire", 0.1, INK_SOFT), ("ML in health", "i.mlhealth", 0.1, KEPT),
+                 ("ML in drug discovery", "i.mlhealth", 0.6, KEPT), ("Jasmine Sun", "i.names", 0.15, WORD),
+                 ("Celine Nguyen", "i.names", 0.65, WORD)]
+        spots = [LEFT * 3.6 + UP * 1.0, RIGHT * 2.6 + UP * 1.0, LEFT * 0.4 + UP * 0.05, LEFT * 4.0 + DOWN * 0.95,
+                 RIGHT * 0.6 + DOWN * 0.95, LEFT * 2.6 + DOWN * 1.95, RIGHT * 2.6 + DOWN * 1.95]
+        for (text, cue, frac, col), spot in zip(items, spots):
+            self.at(cue, frac)
+            c = self.card(text, dot=col).move_to(spot)
+            self.play(FadeIn(c, shift=UP * 0.12), run_time=0.5)
+
+        # Open code
+        self.at("i.open")
+        self.clear_all_but(trace, who, run_time=0.4)
+        oc = label("the code is open", size=50, color=INK, weight=BOLD).shift(UP * 1.0)
+        self.play(FadeIn(oc, shift=UP * 0.15), run_time=0.7)
+        self.at("i.prs")
+        pr = self.card("pull requests welcome", dot=WORD).next_to(oc, DOWN, buff=0.6)
+        self.play(FadeIn(pr, shift=UP * 0.1), run_time=0.5)
+        self.at("i.brickbats")
+        bb = VGroup(self.card("brickbats", color=REJ, dot=REJ), self.card("praise", color=KEPT, dot=KEPT))
+        bb.arrange(RIGHT, buff=0.6).next_to(pr, DOWN, buff=0.45)
+        wl = label("both welcome", size=26, color=INK_SOFT).next_to(bb, DOWN, buff=0.3)
+        self.play(LaggedStartMap(FadeIn, bb, lag_ratio=0.3), FadeIn(wl), run_time=0.9)
+
+        self.at("i.attempt")
+        self.clear_all_but(trace, who, run_time=0.3)
+        here = page("here's my attempt.", size=54, color=KEPT)
+        self.play(FadeIn(here, shift=UP * 0.15), run_time=0.7)
+        self.finish()
+        trace.clear_updaters()

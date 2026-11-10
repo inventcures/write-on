@@ -1,46 +1,46 @@
 {
   "scene": 3,
   "title": "GhostOverflow",
-  "duration": 42.296,
+  "duration": 41.705,
   "beats": [
     {
       "id": "3.1",
       "kind": "narration",
-      "start": 0.5,
+      "start": 0.417,
       "speech": 6.715,
-      "end": 7.59,
+      "end": 7.448,
       "display_text": "Idea two. Delete is a cliff. Write-on adds two gentler slopes before it."
     },
     {
       "id": "3.2",
       "kind": "key",
-      "start": 7.59,
+      "start": 7.448,
       "speech": 7.448,
-      "end": 15.621,
+      "end": 15.396,
       "display_text": "The first is Ghost. Press Ctrl+/ and the text fades almost to nothing, but stays exactly where it was."
     },
     {
       "id": "3.3",
       "kind": "narration",
-      "start": 15.621,
+      "start": 15.396,
       "speech": 6.012,
-      "end": 22.008,
+      "end": 21.725,
       "display_text": "Now you can read the paragraph as if it were gone. If it reads better, leave it ghosted. If not, bring it back."
     },
     {
       "id": "3.4",
       "kind": "key",
-      "start": 22.008,
+      "start": 21.725,
       "speech": 8.795,
-      "end": 31.386,
+      "end": 31.02,
       "display_text": "The second is Overflow. A line you love, but that doesn't belong here, goes to the side with Ctrl+Shift+X, and waits until you want it back."
     },
     {
       "id": "3.5",
       "kind": "narration",
-      "start": 31.385,
-      "speech": 9.702,
-      "end": 41.463,
+      "start": 31.02,
+      "speech": 9.703,
+      "end": 41.039,
       "display_text": "So instead of keep or delete, you get a dial. Keep it, hold a variant, ghost it, overflow it, and only then, delete."
     }
   ]

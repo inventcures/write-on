@@ -1,38 +1,38 @@
 {
   "scene": 4,
   "title": "Timeline",
-  "duration": 31.617,
+  "duration": 31.11,
   "beats": [
     {
       "id": "4.1",
       "kind": "narration",
-      "start": 0.5,
+      "start": 0.416,
       "speech": 8.571,
-      "end": 9.445,
+      "end": 9.304,
       "display_text": "Idea three is a small vocabulary. The colours always mean the same thing. Green is kept. Amber is undecided. Red is rejected."
     },
     {
       "id": "4.2",
       "kind": "key",
-      "start": 9.445,
+      "start": 9.304,
       "speech": 5.639,
-      "end": 15.667,
+      "end": 15.442,
       "display_text": "Every choice you make lands on a timeline, which opens with Ctrl+Shift+L."
     },
     {
       "id": "4.3",
       "kind": "narration",
-      "start": 15.667,
+      "start": 15.442,
       "speech": 9.46,
-      "end": 25.501,
+      "end": 25.219,
       "display_text": "Zoom out and you see the shape of a session, bursts of drafting, stretches of cutting. Zoom in and each moment shows what changed."
     },
     {
       "id": "4.4",
       "kind": "narration",
-      "start": 25.501,
+      "start": 25.219,
       "speech": 4.907,
-      "end": 30.784,
+      "end": 30.443,
       "display_text": "You can replay a piece being written, then click any moment and start editing from there."
     }
   ]
