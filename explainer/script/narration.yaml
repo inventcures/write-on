@@ -1,0 +1,186 @@
+# write-on orientation: chapters -> scenes -> beats. `text` is spoken and captioned;
+# script/lexicon.yaml respells it for the TTS only. `kind` sets the TTS style and the pause after.
+# Every product claim is checked against the app (README.md, GLOSSARY.md, src/ui/colours.ts on main)
+# and the master spec; see script/fact_check.md.
+
+- chapter: 0
+  title: "Keep or delete"
+  scenes:
+    - scene: 0
+      name: Hook
+      beats:
+        - id: "0.1"
+          kind: narration
+          visual: "A blinking caret types one sentence in the app's mono font on navy."
+          text: "Here's a sentence. The meeting was really productive. You read it back, and something feels off. Maybe it's the word. Maybe it's the whole sentence."
+        - id: "0.2"
+          kind: narration
+          visual: "Two buttons appear under it: KEEP and DELETE."
+          text: "Most editors give you exactly two moves. Keep it, or delete it."
+        - id: "0.3"
+          kind: narration
+          visual: "DELETE: the sentence shatters to red dust. Rewind. KEEP: a dashed empty line for the better version that never gets written."
+          text: "Delete it, and your first try is gone for good. Keep it, and the better version may never get written. Either way, you have to decide before you've finished thinking."
+        - id: "0.4"
+          kind: narration
+          visual: "A third button slides in between them: KEEP BOTH. The two buttons dim."
+          text: "Write-on gives you a third move. Keep both."
+
+    - scene: 1
+      name: Title
+      beats:
+        - id: "1.1"
+          kind: narration
+          visual: "Title card 'write-on' with a word-grain wave under 'on'. Subtitle: an orientation."
+          text: "This is a short orientation, not a manual. Write-on is meant to bend to the way you think, not the other way round."
+        - id: "1.2"
+          kind: narration
+          visual: "A keyboard silhouette with worn Backspace key glowing; then four small icons for the ideas ahead."
+          text: "But four ideas make it click much faster, especially if your hands already know another editor by heart."
+
+- chapter: 1
+  title: "Alternative control"
+  scenes:
+    - scene: 2
+      name: Alternatives
+      beats:
+        - id: "2.1"
+          kind: narration
+          visual: "Heading: not version control, but alternative control. Credit line: idea from Jason Fried's Write_On."
+          text: "Idea one comes from Jason Fried's Write_On. Not version control, but alternative control."
+        - id: "2.2"
+          kind: narration
+          visual: "Left: whole-page snapshots stacked along a time axis, Mon Tue Wed."
+          text: "Version control thinks in time: snapshots of the whole document, Monday, Tuesday, Wednesday. To find an old phrasing, you dig through the past."
+        - id: "2.3"
+          kind: narration
+          visual: "Right: one sentence, with its other phrasings stacked faintly beneath just that sentence."
+          text: "Alternative control thinks in place. The other ways of saying this one line live right underneath it."
+        - id: "2.4"
+          kind: key
+          visual: "Caret on 'productive'; key cap Ctrl+Shift+A; the word gains a violet wave; variants 'useful', 'worth it' appear in a small stack."
+          text: "Put the caret on a word and press Ctrl+Shift+A. Now that word can hold variants."
+        - id: "2.5"
+          kind: narration
+          visual: "Arrow keys pressed; the word cycles in place and the sentence reflows each time."
+          text: "Hover and press the arrow keys, and you read each option in context, in the sentence where it has to live."
+        - id: "2.6"
+          kind: narration
+          visual: "Three examples stacked: word with thin violet wave, sentence with lower rose wave, paragraph with copper margin bar."
+          text: "It works at three sizes, which Write-on calls grains. A word gets a thin violet wave. A sentence, a lower rose wave. A paragraph, a copper bar in the margin."
+        - id: "2.7"
+          kind: narration
+          visual: "Undo stack icon stays empty while flips happen."
+          text: "And flipping between variants is not an edit. Nothing is lost, and there's nothing to undo."
+
+- chapter: 2
+  title: "Softer than delete"
+  scenes:
+    - scene: 3
+      name: GhostOverflow
+      beats:
+        - id: "3.1"
+          kind: narration
+          visual: "A paragraph at the top of a slope that ends in a cliff labelled delete."
+          text: "Idea two. Delete is a cliff. Write-on adds two gentler slopes before it."
+        - id: "3.2"
+          kind: key
+          visual: "Key cap Ctrl+/; the last sentence fades to about 11 percent, still in place."
+          text: "The first is Ghost. Press Ctrl+/ and the text fades almost to nothing, but stays exactly where it was."
+        - id: "3.3"
+          kind: narration
+          visual: "An eye reads across the paragraph, skipping the ghost; then the ghost revives."
+          text: "Now you can read the paragraph as if it were gone. If it reads better, leave it ghosted. If not, bring it back."
+        - id: "3.4"
+          kind: key
+          visual: "Key cap Ctrl+Shift+X; a line lifts out of the page into an Overflow tray at the side, with a thread back to where it came from."
+          text: "The second is Overflow. A line you love, but that doesn't belong here, goes to the side with Ctrl+Shift+X, and waits until you want it back."
+        - id: "3.5"
+          kind: narration
+          visual: "The slope becomes a dial: keep, variant, ghost, overflow, delete."
+          text: "So instead of keep or delete, you get a dial. Keep it, hold a variant, ghost it, overflow it, and only then, delete."
+
+- chapter: 3
+  title: "Colours and the timeline"
+  scenes:
+    - scene: 4
+      name: Timeline
+      beats:
+        - id: "4.1"
+          kind: narration
+          visual: "Three swatches: green kept, amber undecided, red rejected, each with its second cue."
+          text: "Idea three is a small vocabulary. The colours always mean the same thing. Green is kept. Amber is undecided. Red is rejected."
+        - id: "4.2"
+          kind: key
+          visual: "A horizontal timeline draws left to right, coloured ticks in bursts."
+          text: "Every choice you make lands on a timeline, which opens with Ctrl+Shift+L."
+        - id: "4.3"
+          kind: narration
+          visual: "Zoom out: the shape of a session. Zoom in to one moment: 'tension' struck red, 'struggle' in green."
+          text: "Zoom out and you see the shape of a session, bursts of drafting, stretches of cutting. Zoom in and each moment shows what changed."
+        - id: "4.4"
+          kind: narration
+          visual: "A playhead replays the piece being written; click a tick, 'edit here', the page opens at that spot."
+          text: "You can replay a piece being written, then click any moment and start editing from there."
+
+- chapter: 4
+  title: "The mental model"
+  scenes:
+    - scene: 5
+      name: MentalModel
+      beats:
+        - id: "5.1"
+          kind: narration
+          visual: "A single line of text turns into a branching tree of possibilities; branches stay open."
+          text: "Idea four is the mental model. A draft isn't one line of text. It's a tree of possibilities, and you decide when each branch closes. Or whether it ever does."
+        - id: "5.2"
+          kind: narration
+          visual: "Habit card 1: torn? add a variant."
+          text: "That gives you three habits. When you're torn between two phrasings, don't choose yet. Add a variant."
+        - id: "5.3"
+          kind: narration
+          visual: "Habit card 2: unsure? ghost it."
+          text: "When you're unsure a line belongs, ghost it instead of deleting it."
+        - id: "5.4"
+          kind: narration
+          visual: "Habit card 3: love it but it doesn't fit? overflow it."
+          text: "And when you love a line that doesn't fit, send it to Overflow."
+        - id: "5.5"
+          kind: key
+          visual: "The app's first screen: just text and a word count. Key cap Ctrl+Shift+R; tools slide in."
+          text: "Your first minute: Write-on opens in read mode, just your words and a word count. Press Ctrl+Shift+R to bring the tools in. The question mark brings this video back."
+        - id: "5.6"
+          kind: narration
+          visual: "Hands typing normally; the tools stay quiet at the edges."
+          text: "Then write the way you always do. Reach for these tools only at the moment you feel the urge to delete."
+
+- chapter: 5
+  title: "It adapts to you"
+  scenes:
+    - scene: 6
+      name: AdaptsToYou
+      beats:
+        - id: "6.1"
+          kind: narration
+          visual: "Flips, ghosts and stashes rise off the page as small coloured dots and gather into a pattern."
+          text: "Why does this matter? Because every flip, ghost and stash is a small decision, and your decisions are a trace of how you think."
+        - id: "6.2"
+          kind: formula
+          visual: "Ten pairs of short vs long variants; eight times the short one is green. A bar: 8 of 10."
+          text: "If you pick the shorter variant eight times out of ten, that's a pattern, and it belongs to you."
+        - id: "6.3"
+          kind: narration
+          visual: "Two columns. Solid: TODAY, the workbench, no AI, stays in your browser. Dashed: PLANNED, learns your style, quiet nudges as questions, editor personas."
+          text: "To be clear about what exists: today, Write-on is the workbench, these tools with no AI at all, and your writing stays in your browser and your own files. Next, we plan to learn from your choices and past writing, with quiet nudges that ask questions, and editor personas who critique."
+        - id: "6.4"
+          kind: narration
+          visual: "A pen stays in the writer's hand; the machine-blue mark only points."
+          text: "One thing won't change: it never writes the piece for you. It keeps every option within reach, and learns to ask better questions."
+
+    - scene: 7
+      name: Close
+      beats:
+        - id: "7.1"
+          kind: narration
+          visual: "Back to the opening sentence. The caret hovers near delete, then presses Ctrl+Shift+A instead. 'Write on.'"
+          text: "So the next time you reach for delete, pause, and keep both. Write on."

@@ -1,0 +1,9 @@
+camera:
+  background_color: "#050a1c"
+  fps: 30
+text:
+  font: "IBM Plex Mono"
+  alignment: "LEFT"
+directories:
+  subdirs:
+    output: "videos"

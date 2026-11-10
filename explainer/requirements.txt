@@ -1,0 +1,10 @@
+# ManimGL from 3b1b/manim (pip install -e path/to/3b1b/manim), plus:
+av
+google-genai==2.30.1
+httpx
+numpy
+pyloudnorm
+python-dotenv
+PyYAML
+scipy
+soundfile

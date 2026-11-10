@@ -1,0 +1,23 @@
+{
+  "scene": 1,
+  "title": "Title",
+  "duration": 15.444,
+  "beats": [
+    {
+      "id": "1.1",
+      "kind": "narration",
+      "start": 0.517,
+      "speech": 6.842,
+      "end": 7.746,
+      "display_text": "This is a short orientation, not a manual. Write-on is meant to bend to the way you think, not the other way round."
+    },
+    {
+      "id": "1.2",
+      "kind": "narration",
+      "start": 7.746,
+      "speech": 6.45,
+      "end": 14.583,
+      "display_text": "But four ideas make it click much faster, especially if your hands already know another editor by heart."
+    }
+  ]
+}
