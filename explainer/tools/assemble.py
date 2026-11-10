@@ -15,6 +15,9 @@ from pathlib import Path
 from render import ORDER, SCENES, VIDEO_DIR, video_path
 
 MAX_CAPTION_CHARS = 84
+# Seconds over which the maker's voice and picture ease into the narrated video. The narrator's first
+# word lands just after the maker's last, so the two voices never talk over each other.
+CROSSFADE = 1.6
 LINE_CHARS = 44
 
 
@@ -121,10 +124,28 @@ def main() -> None:
             cursor += probe_duration(part)
             parts.append(part)
             print(f"[{'#' * i}{'.' * (len(SCENES) - i)}] muxed scene {number:02d}", flush=True)
-        listing = Path(tmp) / "list.txt"
-        listing.write_text("".join(f"file '{p}'\n" for p in parts))
-        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", str(listing),
-                        "-c", "copy", "-movflags", "+faststart", str(Path(tmp) / "joined.mp4")], check=True)
+        first, rest = parts[0], parts[1:]
+        if ORDER[0] == 99:  # the maker's voice blends into the narrated video instead of cutting
+            listing = Path(tmp) / "list.txt"
+            listing.write_text("".join(f"file '{p}'\n" for p in rest))
+            subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", str(listing),
+                            "-c", "copy", str(Path(tmp) / "rest.mp4")], check=True)
+            offset = probe_duration(first) - CROSSFADE
+            subprocess.run(
+                ["ffmpeg", "-y", "-loglevel", "error", "-i", str(first), "-i", str(Path(tmp) / "rest.mp4"),
+                 "-filter_complex",
+                 f"[0:v][1:v]xfade=transition=fade:duration={CROSSFADE}:offset={offset:.3f},format=yuv420p[v];"
+                 f"[0:a][1:a]acrossfade=d={CROSSFADE}:c1=qsin:c2=qsin[a]",
+                 "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-crf", "20", "-preset", "medium",
+                 "-c:a", "aac", "-b:a", "192k", "-ar", "48000", str(Path(tmp) / "joined.mp4")], check=True)
+            for number in ORDER[1:]:
+                offsets[number] -= CROSSFADE
+            cursor -= CROSSFADE
+        else:
+            listing = Path(tmp) / "list.txt"
+            listing.write_text("".join(f"file '{p}'\n" for p in parts))
+            subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", str(listing),
+                            "-c", "copy", str(Path(tmp) / "joined.mp4")], check=True)
         lay_bed(Path(tmp) / "joined.mp4", final_dir / name)
     captions = final_dir / ("write-on-orientation.srt" if args.final else "preview.srt")
     write_captions(offsets, captions)
