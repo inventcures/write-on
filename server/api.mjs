@@ -1,5 +1,6 @@
 // The account API (ADR-0008): sign up, sign in, and each writer's own pieces,
 // events and timelines. Pure request → response, so it is testable without a socket.
+import { finishGoogle, startGoogle } from './google.mjs';
 import { LIMITS } from './store.mjs';
 
 export const COOKIE = 'wo_session';
@@ -61,11 +62,11 @@ function cleanEvent(e) {
 
 /**
  * req: { method, path, headers, body (parsed JSON or null), ip, secure, now }
- * ctx: { store, limits }
- * Returns { status, body, cookie? }.
+ * ctx: { store, limits, google?: googleConfig(env), fetch? }
+ * Returns { status, body, cookie? }, or for redirects { status: 302, location, cookies }.
  */
 export async function handleApi(req, ctx) {
-  const { store, limits } = ctx;
+  const { store, limits, google } = ctx;
   const { method, path, headers, body, ip, now } = req;
   const mutating = method !== 'GET' && method !== 'HEAD';
   // A custom header can't be sent cross-site without a CORS preflight, which
@@ -74,7 +75,22 @@ export async function handleApi(req, ctx) {
 
   if (path === '/api/me' && method === 'GET') {
     const user = store.userForSession(cookieOf(headers), now);
-    return ok({ accounts: true, user: user ? { email: user.email } : null });
+    return ok({ accounts: true, google: !!google?.enabled, user: user ? { email: user.email } : null });
+  }
+
+  // Continue with Google: a redirect out, and one back (ADR-0009).
+  if (path === '/api/auth/google' && method === 'GET') {
+    if (!google?.enabled) return no(404, 'Google sign-in is not switched on for this site.');
+    if (!limits.login(ip, now)) return { status: 302, location: '/?signin=busy', cookies: [] };
+    return startGoogle(req, google);
+  }
+  if (path === '/api/auth/google/callback' && method === 'GET') {
+    if (!google?.enabled) return no(404, 'Google sign-in is not switched on for this site.');
+    const done = await finishGoogle(req, google, req.query ?? new URLSearchParams(), ctx.fetch ?? fetch);
+    if (done.error) return { status: 302, location: `/?signin=${done.error}`, cookies: [done.clear] };
+    const user = store.userForGoogle(done.user.sub, done.user.email, now);
+    const s = store.createSession(user.id, now);
+    return { status: 302, location: `/?signin=${user.created ? 'google-new' : 'google'}`, cookies: [done.clear, sessionCookie(s.token, s.maxAge, req.secure)] };
   }
 
   if ((path === '/api/signup' || path === '/api/login') && method === 'POST') {

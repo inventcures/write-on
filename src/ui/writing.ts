@@ -14,6 +14,8 @@ export interface WritingHost {
   replay(id: string, at?: number): Promise<void>;
   signIn(email: string, password: string, create: boolean): Promise<string | null>;
   signOut(): Promise<void>;
+  /** Leave for Google's sign-in page; the app comes back signed in. */
+  signInWithGoogle(): Promise<void>;
   /** Copy the pieces kept in this browser into the account. Returns how many. */
   bringBrowserPieces(): Promise<number>;
   browserPiecesNotInAccount(): Promise<number>;
@@ -438,6 +440,19 @@ export class WritingView {
       void go(true);
     };
     form.append(email, pass, signIn, create);
+    if (me.google) {
+      const g = el('button', 'yw-google', 'Continue with Google');
+      g.type = 'button';
+      g.title = 'Sign in, or make an account, with your Google account';
+      g.onclick = () => {
+        g.disabled = true;
+        note.textContent = 'Taking you to Google…';
+        void this.host.signInWithGoogle();
+      };
+      const or = el('div', 'yw-or');
+      or.append(g, el('span', 'yw-or-word', 'or'));
+      this.account.append(or);
+    }
     this.account.append(form, note);
   }
 

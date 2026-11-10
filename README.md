@@ -57,3 +57,5 @@ Limits: 30 requests an hour per caller, 500 a day in all.
 ## Accounts (optional)
 
 Off unless the server has lasting storage (ADR-0008). On Railway, add a volume mounted at `/data` and set `DATA_DIR=/data`. Writers then sign in with email and password; each writer's pieces, timelines and event log are theirs alone. Signed out, everything stays in the browser as before.
+
+**Continue with Google (optional, ADR-0009).** Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` from a Google OAuth client of type "Web application", with `https://<your-site>/api/auth/google/callback` as an authorised redirect URI. Set `PUBLIC_URL` (for example `https://write-on.up.railway.app`) so the redirect never depends on the request's Host header. The secret stays on the server. Without these, the button doesn't show.

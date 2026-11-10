@@ -260,3 +260,27 @@ test('? opens the shortcuts when not typing, and is a question mark in the page'
   await expect(sheet).toBeVisible();
   await expect(sheet).toContainText('when not typing in the text');
 });
+
+test('continue with Google keeps the piece, goes to Google, and says how it went on the way back', async ({ page }) => {
+  await page.keyboard.press('Control+Shift+R');
+  await page.getByText('first try away', { exact: false }).click();
+  await page.keyboard.press('End');
+  await page.keyboard.type(' Before Google.');
+  let asked: URL | null = null;
+  // Playwright can't intercept a redirect, so catch our own start step, read
+  // where it sends the writer, and play Google: the writer says no, Google sends them back.
+  await page.route('**/api/auth/google', async (route) => {
+    const res = await route.fetch({ maxRedirects: 0 });
+    asked = new URL(res.headers()['location']);
+    return route.fulfill({ status: 302, headers: { location: `/api/auth/google/callback?error=access_denied&state=${asked.searchParams.get('state')}` } });
+  });
+  await page.getByRole('button', { name: /^Your writing/ }).click();
+  await page.getByRole('button', { name: 'Continue with Google' }).click();
+  await page.waitForURL('http://localhost:4174/');
+  expect(asked!.searchParams.get('client_id')).toBe('e2e-client');
+  expect(asked!.searchParams.get('redirect_uri')).toBe('http://localhost:4174/api/auth/google/callback');
+  expect(asked!.toString()).not.toContain('e2e-secret');
+  await expect(page.getByText('Google sign-in was cancelled. Nothing changed.')).toBeVisible();
+  expect(page.url()).toBe('http://localhost:4174/');
+  expect(await pieceFile(page)).toContain('Before Google.');
+});

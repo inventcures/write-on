@@ -29,7 +29,7 @@ describe('accounts', () => {
     expect(res.status).toBe(200);
     expect(res.cookie).toMatch(/^wo_session=[^;]+; Path=\/; HttpOnly; SameSite=Lax; Max-Age=2592000; Secure$/);
     const token = res.cookie!.split(';')[0].split('=')[1];
-    expect((await call('GET', '/api/me', null, token)).body).toEqual({ accounts: true, user: { email: 'writer@example.com' } });
+    expect((await call('GET', '/api/me', null, token)).body).toEqual({ accounts: true, google: false, user: { email: 'writer@example.com' } });
     await call('POST', '/api/logout', null, token);
     expect((await call('GET', '/api/me', null, token)).body.user).toBeNull();
   });

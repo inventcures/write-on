@@ -6,6 +6,7 @@ import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { aiConfig, rateLimiter, suggest } from './server/suggest.mjs';
 import { apiLimits, handleApi } from './server/api.mjs';
+import { googleConfig } from './server/google.mjs';
 import { openStore } from './server/store.mjs';
 
 const root = join(fileURLToPath(new URL('.', import.meta.url)), 'dist');
@@ -31,6 +32,7 @@ const limit = rateLimiter();
 // volume); without it, accounts would vanish on every deploy (ADR-0008).
 const store = process.env.DATA_DIR ? await openStore(process.env.DATA_DIR) : null;
 const limits = apiLimits();
+const google = googleConfig(process.env);
 const json = (res, status, body, cookie) =>
   res
     .writeHead(status, {
@@ -74,15 +76,19 @@ createServer(async (req, res) => {
     return;
   }
   if (url.pathname.startsWith('/api/') && url.pathname !== '/api/suggest' && url.pathname !== '/api/ai') {
-    if (!store) return json(res, url.pathname === '/api/me' ? 200 : 503, url.pathname === '/api/me' ? { accounts: false, user: null } : { error: 'Accounts are not switched on for this site.' });
+    if (!store) return json(res, url.pathname === '/api/me' ? 200 : 503, url.pathname === '/api/me' ? { accounts: false, google: false, user: null } : { error: 'Accounts are not switched on for this site.' });
     const max = url.pathname.startsWith('/api/timelines/') ? 9_000_000 : 2_500_000;
     const input = req.method === 'GET' || req.method === 'HEAD' ? null : await readBody(req, max);
     const ip = String(req.headers['x-real-ip'] ?? req.headers['x-forwarded-for'] ?? req.socket.remoteAddress ?? '').split(',')[0].trim();
     try {
       const out = await handleApi(
-        { method: req.method, path: url.pathname, headers: req.headers, body: input, ip, secure: req.headers['x-forwarded-proto'] === 'https', now: Date.now() },
-        { store, limits },
+        { method: req.method, path: url.pathname, query: url.searchParams, headers: req.headers, body: input, ip, secure: req.headers['x-forwarded-proto'] === 'https', now: Date.now() },
+        { store, limits, google, fetch },
       );
+      if (out.location) {
+        res.writeHead(302, { location: out.location, 'cache-control': 'no-store', 'referrer-policy': 'no-referrer', 'set-cookie': out.cookies }).end();
+        return;
+      }
       return json(res, out.status, out.body, out.cookie);
     } catch (err) {
       console.error('api error', err?.message);

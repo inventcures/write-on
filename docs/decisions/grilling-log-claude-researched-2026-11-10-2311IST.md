@@ -288,3 +288,12 @@ tp53: "add user controls - auth, login, history, event log (of ALL your writing)
 ### Q41. tp53: "shift + / = ? should open the keyboard shortcut list". But this is a writing app: a writer needs to type ?.
 - **Answer:** a bare `?` opens the shortcuts whenever you are not typing (focus outside the page, a panel's text box, or a form). In the page it is always a question mark. Ctrl+? (Ctrl+Shift+/) opens the list from anywhere, the page included, and can be rebound like the other shortcuts. Both are listed in the sheet itself.
 - **Why:** the convention (Gmail, GitHub, YouTube) is `?` for help, and every one of those apps also leaves `?` alone inside text fields. Taking `?` away from writers would break the thing the app exists for.
+
+## Round 11: Continue with Google (2026-11-10)
+
+### Q42. tp53: "enable Google login and sign up also." One button or two?
+- **Answer:** one, "Continue with Google". Google decides whether the writer is new; we just make the account the first time. Two buttons would ask the writer a question that has only one answer.
+- **Why server-side:** the client secret stays on Railway, like the Gemini key. Full reasons in ADR-0009.
+
+### Q43. An account with a password already exists for the same email. Join or refuse?
+- **Answer:** join, but only when Google says the email is verified. Refusing would leave writers locked out of their own writing for using the "wrong" button. A verified Google email proves the same thing a password sign-up would have needed to prove.
