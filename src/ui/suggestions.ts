@@ -7,16 +7,21 @@ import type { Grain } from '../core/schema';
 import { overflowStart } from '../core/piece';
 
 const CODE = 'write-on:ai-code';
-let enabled: Promise<boolean> | null = null;
+let site: Promise<{ enabled: boolean; code: boolean }> | null = null;
+
+function aiSite(): Promise<{ enabled: boolean; code: boolean }> {
+  site ??= fetch('/api/ai')
+    .then((r) => (r.ok ? r.json() : {}))
+    .then((j: { enabled?: boolean; code?: boolean }) => ({ enabled: j.enabled === true, code: j.code === true }))
+    .catch(() => ({ enabled: false, code: false }));
+  return site;
+}
 
 /** Whether this site has suggestions switched on. Asked once per page load. */
-export function suggestionsEnabled(): Promise<boolean> {
-  enabled ??= fetch('/api/ai')
-    .then((r) => (r.ok ? r.json() : { enabled: false }))
-    .then((j: { enabled?: boolean }) => j.enabled === true)
-    .catch(() => false);
-  return enabled;
-}
+export const suggestionsEnabled = (): Promise<boolean> => aiSite().then((s) => s.enabled);
+
+/** Whether this site keeps suggestions behind an access code (ADR-0011: optional). */
+export const codeNeeded = (): Promise<boolean> => aiSite().then((s) => s.code);
 
 export function accessCode(): string {
   try {

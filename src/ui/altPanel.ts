@@ -16,7 +16,7 @@ import { wordAt, sentenceRanges } from '../core/text';
 import { spokenPunctuation } from '../core/dictation';
 import type { Grain } from '../core/schema';
 import { lookKey, setLook } from './viewPlugins';
-import { accessCode, contextAround, requestSuggestions, setAccessCode, suggestionsEnabled } from './suggestions';
+import { accessCode, codeNeeded, contextAround, requestSuggestions, setAccessCode, suggestionsEnabled } from './suggestions';
 
 const GRAINS: Grain[] = ['word', 'sentence', 'paragraph'];
 const LABEL: Record<Grain, string> = { word: 'Word', sentence: 'Sentence', paragraph: 'Paragraph' };
@@ -245,7 +245,7 @@ export class AltPanel {
   /** Ask the server for three alternatives and add them, unshown, under the writer's text. */
   async suggest(): Promise<void> {
     if (this.busy || this.ask.hidden || !this.isOpen) return;
-    if (!accessCode()) return this.askForCode('Suggestions on this site need the access code.');
+    if (!accessCode() && (await codeNeeded())) return this.askForCode('Suggestions on this site need the access code.');
     const view = this.view();
     const grain = this.grain();
     const { from, to } = this.groupId ? findGroup(view.state.doc, this.groupId)! : this.target!;

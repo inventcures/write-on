@@ -107,10 +107,22 @@ test('rebinds a shortcut in the shortcuts sheet', async ({ page }) => {
   await expect(page.locator('.ghost')).toHaveCount(before + 1);
 });
 
+test('with no access code set, anyone gets suggestions straight away', async ({ page }) => {
+  await page.route('**/api/ai', (r) => r.fulfill({ json: { enabled: true, code: false } }));
+  await page.route('**/api/suggest', (r) => r.fulfill({ json: { alternatives: ['effort', 'attempt', 'go'] } }));
+  await page.reload();
+  await page.keyboard.press('Control+Shift+R');
+  await page.getByText('first try away', { exact: false }).click();
+  await page.keyboard.press('Control+Shift+G');
+  const panel = page.locator('.alt-panel');
+  await expect(panel.locator('.row.machine')).toHaveCount(3);
+  await expect(panel.getByLabel('Access code for suggestions')).toHaveCount(0);
+});
+
 test('suggestions arrive in blue under the writer\'s word, behind the access code', async ({ page }) => {
   let asked: { text?: string; grain?: string; code?: string } = {};
   let calls = 0;
-  await page.route('**/api/ai', (r) => r.fulfill({ json: { enabled: true } }));
+  await page.route('**/api/ai', (r) => r.fulfill({ json: { enabled: true, code: true } }));
   await page.route('**/api/suggest', async (r) => {
     asked = { ...r.request().postDataJSON(), code: r.request().headers()['x-write-on-code'] };
     if (asked.code !== 'sesame') return r.fulfill({ status: 401, json: { error: 'That access code isn’t right.' } });
@@ -153,6 +165,7 @@ test('a first visit explains itself and the tour waits for each step', async ({ 
   await expect(welcome).toContainText('Ghost');
   await expect(welcome).toContainText('Overflow');
   await expect(welcome.getByRole('link', { name: 'pair programming' })).toHaveAttribute('href', /on-pair-programming/);
+  await expect(welcome).toContainText('fast, performant and, most importantly, productive: it assists when nudged, else stays out of your way.');
   await expect(welcome.getByRole('link', { name: 'The story' })).toHaveAttribute('href', 'https://inventcures.github.io/write-on/');
   const video = welcome.getByLabel('Explainer video');
   await expect(video).toHaveAttribute('poster', '/explainer.jpg');

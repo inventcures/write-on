@@ -204,6 +204,8 @@ body.read .count::after { content: '  ·  Ctrl+Shift+R or click here for the too
 .welcome-pair { font-size: 14px; line-height: 1.6; margin: -6px 0 18px; color: var(--ink-soft); }
 .welcome-origin { font-size: 12px; line-height: 1.55; margin: 10px 0 0; color: var(--ink-faint); }
 .welcome-origin a { color: var(--ink-soft); text-underline-offset: 3px; }
+.welcome-three { font-size: 14px; line-height: 1.6; margin: -10px 0 18px; color: var(--ink-soft); }
+.welcome-three strong { color: var(--ink); font-weight: 600; }
 .welcome-pair a { color: var(--ink); text-decoration-color: var(--ink-faint); text-underline-offset: 3px; }
 .welcome-video video { width: 100%; border-radius: 8px; border: 1px solid var(--panel-line); margin-bottom: 18px; background: #000; }
 .welcome-ideas { list-style: none; margin: 0 0 22px; padding: 0; display: grid; gap: 10px; }
