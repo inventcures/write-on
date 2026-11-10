@@ -1,6 +1,6 @@
 # Write\_On Thought Partner: Master Spec & Research
 
-Nov 10, 2026 · tp53 · exported 2026-11-10-1731UTC · live, editable version: https://claude.ai/artifact/A9AkRirCKozPjctQpqhN7P
+Nov 10, 2026 · tp53 · exported 2026-11-10-1737UTC · live, editable version: https://claude.ai/artifact/A9AkRirCKozPjctQpqhN7P
 
 Write\_On is an editor where every word, sentence and paragraph can hold quiet alternatives, and a thought partner that learns how you think on the page and nudges without ever writing the piece for you. This doc specs both layers, from the Write\_On core we reproduce to the learning layer we add on top.
 
@@ -13,11 +13,11 @@ Every claim about Jason Fried's original carries a grounding tag, so we never co
 | \[TWEET\] | Stated in the launch post text | "alternative control at the word, sentence, and paragraph level" |
 | \[CLIPS\] | Measured from the three demo clips by the open-source replica's author | Ghosted text sits at about 11% opacity |
 | \[CLONE\] | A clone's own design decision where the clips are silent | Alternative groups do not nest |
-| \[VIDEO\] | Checked by us against our own download of the video | Pending: the video is still being pulled to your laptop |
+| \[VIDEO\] | Checked by us against our own download of the video | The Lab popover lists six marking passes and four trim levels (5:59) |
 | \[INFERRED\] | Our reading of how it likely works | Why a flip is not an undo step |
 | \[NEW\] | Our extension beyond Write\_On | The style model and the nudge system |
 
-Status today: the Write\_On teardown is drafted from the clips as measured by two open-source clones, and the landscape section from the research thread's notes. Our own \[VIDEO\] check is pending. Everything in sections on the learning layer, nudges, imitation and evaluation is \[NEW\] by definition.
+Status today: the Write\_On teardown is drafted from the clips as measured by two open-source clones, and the landscape section from the research thread's notes. The main-clip claims are now checked against our own frames \[VIDEO\]; the follow-up and file-format clips are not yet downloaded. Everything in sections on the learning layer, nudges, imitation and evaluation is \[NEW\] by definition.
 
 ## Vision and thesis
 
@@ -60,7 +60,7 @@ Ten rules settle most product arguments before they start. When a feature idea c
 
 Write\_On, as shown, is a dark, monospace, single-document editor with five ideas on a bare page: alternatives in place, ghosting, an Overflow side panel, an AI Lab that marks and trims but never rewrites, and one Markdown file that holds it all. This teardown comes from the frame-by-frame measurements published by an open-source replica, cross-checked against a second clone; our own frames will confirm or correct it.
 
-**Grounding for this section.** Fried's post (2026-09-30, decoded from the post ID) has three clips: a 6:55 main walkthrough, a 1:26 follow-up ("Plus more explosions!"), and a 0:52 reply about the file format, all recorded at 3096×1952, 60 fps ([write-on-replica design spec](https://github.com/joeysim/write-on-replica/blob/main/docs/superpowers/specs/2026-10-11-write-on-replica-design.md)). Items below tagged \[CLIPS\] were measured from those clips by the replica's author; items tagged \[CLONE\] are that author's or [undertext](https://github.com/klipstack/undertext)'s design decisions where the clips are silent. Our own \[VIDEO\] check is pending the download on your laptop. Items tagged \[FRIED\] quote Fried's own notes from the post's thread, which confirm the replica's measurements.
+**Grounding for this section.** Fried's post (2026-09-30, decoded from the post ID) has three clips: a 6:55 main walkthrough, a 1:26 follow-up ("Plus more explosions!"), and a 0:52 reply about the file format, all recorded at 3096×1952, 60 fps ([write-on-replica design spec](https://github.com/joeysim/write-on-replica/blob/main/docs/superpowers/specs/2026-10-11-write-on-replica-design.md)). Items below tagged \[CLIPS\] were measured from those clips by the replica's author; items tagged \[CLONE\] are that author's or [undertext](https://github.com/klipstack/undertext)'s design decisions where the clips are silent. Items tagged \[VIDEO\] we checked ourselves against frames from the 6:55 main clip (see the table at the end of this section). Items tagged \[FRIED\] quote Fried's own notes from the post's thread, which confirm the replica's measurements.
 
 ### What you see on screen \[CLIPS\]
 
@@ -117,7 +117,7 @@ Mark hedges and filler
 
 Choosing a trim shows a card ("Slight trim · Reading…"), a crimson scan line sweeps down each paragraph, and then the words that would go fade to about 22%. The card reads "535 → 480 words · −10%" and "Faded words would go. Click one to keep it." Clicking a faded passage keeps it. Switching levels is instant because one AI read serves all four. In the clips only the first two levels are shown.
 
-**If the replica's reading holds, Fried's own AI already obeys "point, don't fix".** It marks, fades and deletes, and it never writes new sentences into your piece except the alternatives you explicitly ask for with `??`. Treat this as secondhand for now: the replica's spec says it observed the Lab popover, the trim card and `??` in the clips, but nobody has published frames we can check, the research survey found the AI role disputed between the two clones, and Fried's post text never mentions AI features. Whether these AI features are in the original is the first thing we'll check against our own frames \[VIDEO pending\].
+**Fried's original has AI, and it obeys "point, don't fix" \[VIDEO\].** Our own frames show the Lab popover with exactly the six marking passes, Original and the four trim levels above (5:59 in the main clip), the trim cards "Slight trim 535 → 480 words · −10%" and "Tighten more 535 → 422 words · −21%" with "Faded words would go. Click one to keep it." and the buttons Make the cuts, Walk through, Done, and an "AI alternatives for selection" item in the right-click menu (6:29). What we can't see is how the trims are computed; we infer a model reads the piece. The AI marks, fades and deletes. It never writes new sentences into your piece, except the alternatives you ask for.
 
 ### The file format \[CLIPS, from the 0:52 reply\]
 
@@ -151,6 +151,26 @@ Write\_On uses Control, even on the Mac.
 | Ctrl+U | Source view (the raw file) |
 | Ctrl+S, Ctrl+O | Save, Open |
 | Ctrl+Shift+P | Post to X |
+
+### Checked against our own frames \[VIDEO\]
+
+We reviewed 38 scene-change frames (about 2:09 to 5:54) and 39 frames sampled every 5 seconds (0:00 to 2:09, 5:54 to 6:55) from the 6:55 main clip. Every item below matches the replica's account.
+
+| Claim | What our frames show | Where |
+| --- | --- | --- |
+| Opens in Read mode | Just the essay and a faint word count; no icons | 0:01, 0:06 |
+| Tools appear together | Underlines, margin bar, top and bottom icons all present | 0:11 |
+| Three grains of alternatives | Word underlines ("tension", "paperclip"), a sentence underline ("Shouldn't everything be obvious?"), a margin bar on the third paragraph | 0:11 onward |
+| Cycling in place | "tension" becomes "struggle", "paperclip" becomes "thumbtack", the heading flips to "The Clear, the Easy, the Achievable" and back | 0:51, scene frames 2 to 3 |
+| Paragraph versions | The third paragraph, tinted, swaps to a shorter version and back | scene frames 4 to 6 |
+| Overflow panel | Right-side panel headed "Overflow" in handwriting, holding stashed paragraphs and a link; footer hint about ctrl+↵ or drag | scene frames 16 to 19; 6:14 to 6:24 |
+| Lab popover | "The Lab guide…", six marking passes, then Original, Slight trim, Tighten more, Even sharper, Cut in half | 5:59 |
+| Trim cards | Faded words across the piece and the two cards quoted above | scene frames 33 to 38; 5:54 |
+| Context menu | Alternatives for selection, AI alternatives for selection, Ghost it / Revive it, Stash this in Overflow, each with its Ctrl shortcut | 6:29 to 6:34 |
+| Ghosting | A selected passage drops to near-invisible in place, and the menu then offers "Revive it" | 6:34 |
+| LinkedIn joke | The LinkedIn icon is present early and gone from the bottom row later in the clip | compare 0:11 with scene frame 25 onward |
+
+Not visible in this clip: the alternatives panel with `??` (that is the 1:26 follow-up clip) and the file format (the 0:52 reply). Those two stay \[CLIPS\] until we download the other clips.
 
 ### What the clips leave open \[CLONE\]
 
