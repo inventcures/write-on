@@ -15,7 +15,9 @@ import { exportMarkdown, fromPieceFile, toPieceFile } from '../core/pieceFile';
 import { schema } from '../core/schema';
 import { samplePiece } from '../sample';
 import { AltPanel } from './altPanel';
-import { logEvents, readEvents, toJsonLines } from './eventLog';
+import { loadHistory, logEvents, readEvents, saveHistory, toJsonLines } from './eventLog';
+import { record, replay, startHistory, type PieceHistory } from '../core/history';
+import { Timeline } from './timeline';
 import { explode } from './explode';
 import * as files from './files';
 import { closeMenu, closeSheet, isSheetOpen, notify, shortcutsTable, showMenu, showSheet } from './menus';
@@ -33,6 +35,7 @@ export const SHORTCUTS: [string, string][] = [
   ['Stash in Overflow', 'Ctrl+Shift+X'],
   ['Overflow panel', 'Ctrl+Shift+D'],
   ['Use in the page (in Overflow)', 'Ctrl+Return'],
+  ['Timeline: replay and revisit every moment', 'Ctrl+Shift+L'],
   ['Source view (the raw file)', 'Ctrl+U'],
   ['Save, Open', 'Ctrl+S  Ctrl+O'],
   ['Undo, Redo', 'Ctrl+Z  Ctrl+Shift+Z'],
@@ -64,6 +67,9 @@ export function startApp(root: HTMLElement): void {
   let mode: InputMode = 'caret';
   let flipSession: { id: string; original: number } | null = null;
   let autosaveTimer: ReturnType<typeof setTimeout> | undefined;
+  let history: PieceHistory;
+  let historyTimer: ReturnType<typeof setTimeout> | undefined;
+  let timeline: Timeline | null = null;
 
   // Layout.
   const page = document.createElement('main');
@@ -123,6 +129,7 @@ export function startApp(root: HTMLElement): void {
     button('Open', 'Open (Ctrl+O)', () => void openFile()),
     button('New', 'New piece', () => newPiece()),
     button('Export', 'Export clean Markdown: no ghosts, no Overflow', () => exportClean()),
+    button('Timeline', 'Timeline: replay and revisit every moment (Ctrl+Shift+L)', () => openTimeline()),
     button('Log', 'Export the event log of your choices', () => void exportLog()),
   );
   const xyz = button('XYZ', 'Overflow (Ctrl+Shift+D)', () => toggleOverflow(), 'tool xyz');
@@ -162,12 +169,55 @@ export function startApp(root: HTMLElement): void {
         scheduleAutosave();
         panel.sync(tr.mapping);
       } else if (tr.getMeta(lookKey) === undefined) panel.sync();
+      if (tr.docChanged) {
+        history = record(history, tr);
+        clearTimeout(historyTimer);
+        historyTimer = setTimeout(() => void saveHistory(history), 500);
+      }
       const events = eventsOf(tr);
       if (events.length) void logEvents(view.state.doc.attrs.id as string, events);
       if (tr.docChanged || before.doc !== view.state.doc) updateCount();
       requestAnimationFrame(redraw);
     },
   });
+
+  /** Continue the stored history if it still replays to this piece; otherwise start a new one. */
+  async function attachHistory(doc: Node): Promise<void> {
+    history = startHistory(doc);
+    const stored = await loadHistory(String(doc.attrs.id));
+    if (!stored || view.state.doc !== doc) return;
+    try {
+      const docs = replay(stored);
+      if (docs[docs.length - 1].eq(doc)) history = { ...stored, entries: [...stored.entries, ...history.entries] };
+    } catch {
+      /* the stored history no longer replays; keep the fresh one */
+    }
+  }
+
+  function openTimeline(): void {
+    if (timeline) return;
+    panel.close();
+    closeMenu();
+    timeline = new Timeline({
+      history: () => history,
+      close: closeTimeline,
+      editAt: (from, to) => {
+        closeTimeline();
+        const size = view.state.doc.content.size;
+        const sel = TextSelection.create(view.state.doc, Math.min(from, size), Math.min(Math.max(to, from), size));
+        view.dispatch(view.state.tr.setSelection(sel).scrollIntoView());
+        view.focus();
+        if (!isInOverflow(view.state.doc, sel.from)) openAlternatives();
+      },
+    });
+    timeline.open();
+  }
+
+  function closeTimeline(): void {
+    timeline?.destroy();
+    timeline = null;
+    view.focus();
+  }
 
   function withId(doc: Node): Node {
     return doc.attrs.id ? doc : doc.type.create({ ...doc.attrs, id: newId() }, doc.content);
@@ -191,6 +241,7 @@ export function startApp(root: HTMLElement): void {
     panel.close();
     pieceName = name;
     view.updateState(createEditorState(withId(doc), view.state.plugins.slice(3)));
+    void attachHistory(view.state.doc);
     files.autosave(toPieceFile(view.state.doc), pieceName);
     updateCount();
     requestAnimationFrame(redraw);
@@ -353,6 +404,7 @@ export function startApp(root: HTMLElement): void {
   window.addEventListener(
     'keydown',
     (e) => {
+      if (timeline) return;
       if (isSheetOpen()) {
         if (e.key === 'Escape' || (e.ctrlKey && e.code === 'KeyU')) {
           e.preventDefault();
@@ -377,6 +429,7 @@ export function startApp(root: HTMLElement): void {
         if (e.code === 'KeyA') return handle(openAlternatives);
         if (e.code === 'KeyX' && inEditor) return handle(doStash);
         if (e.code === 'KeyD') return handle(toggleOverflow);
+        if (e.code === 'KeyL') return handle(openTimeline);
         return;
       }
       if (ctrl) {
@@ -410,6 +463,8 @@ export function startApp(root: HTMLElement): void {
   
   void document.fonts?.ready.then(() => requestAnimationFrame(redraw));
 
+  history = startHistory(view.state.doc);
+  void attachHistory(view.state.doc);
   updateCount();
   setOverflowEditable();
   requestAnimationFrame(redraw);

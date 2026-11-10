@@ -119,3 +119,35 @@ body.overflow-open:not(.read) .ProseMirror aside.overflow { display: flex; }
   body { font-size: 17px; }
   .panel, .ProseMirror aside.overflow { width: min(280px, 85vw); }
 }
+
+/* Timeline: every moment of the piece, left to right. */
+.timeline { --tl-writing: #f5d1c0; --tl-cutting: #e0705f; --tl-alternatives: var(--word); --tl-ghost: #6f7590; --tl-overflow: var(--paragraph);
+  position: fixed; inset: 0; z-index: 15; background: var(--page); display: flex; flex-direction: column; padding: 18px 20px 0; outline: none; }
+.tl-bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+.tl-bar h2 { font: 600 32px/1 var(--hand); margin: 0; }
+.tl-controls { display: flex; flex-wrap: wrap; gap: 6px; font-size: 13px; }
+.tl-controls button { border: 1px solid var(--panel-line); border-radius: 6px; padding: 5px 10px; color: var(--ink-soft); }
+.tl-controls button:hover { color: var(--ink); border-color: var(--ink-faint); }
+.tl-track { margin-top: 16px; overflow-x: auto; overflow-y: hidden; cursor: pointer; border-bottom: 1px solid var(--panel-line); padding-bottom: 6px; }
+.tl-track canvas { display: block; }
+.tl-legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--ink-faint); margin: 8px 0 14px; }
+.tl-key::before { content: ''; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; background: var(--c); }
+.tl-writing { --c: var(--tl-writing); } .tl-cutting { --c: var(--tl-cutting); } .tl-alternatives { --c: var(--tl-alternatives); }
+.tl-ghost { --c: var(--tl-ghost); } .tl-overflow { --c: var(--tl-overflow); }
+.tl-moment { max-width: 780px; width: 100%; margin: 0 auto; }
+.tl-when { font-size: 12px; color: var(--ink-faint); }
+.tl-caption { font: 600 26px/1.2 var(--hand); margin: 4px 0 10px; }
+.tl-change { font-size: 16px; line-height: 1.7; white-space: pre-wrap; color: var(--ink-soft); max-height: 24vh; overflow: auto; }
+.tl-change ins { text-decoration: none; color: var(--ink); background: rgba(242, 200, 120, 0.22); border-radius: 3px; padding: 0 1px; }
+.tl-change del { color: var(--ink-faint); text-decoration: none; padding-bottom: 2px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='8' viewBox='0 0 40 8'%3E%3Cpath d='M0 4.5 C6 3 10 5.5 16 4 S28 3 34 4.6 40 4 40 4' stroke='%23e0705f' stroke-width='1.6' fill='none'/%3E%3C/svg%3E") repeat-x 0 55% / 40px 8px; }
+.tl-animate ins { animation: tl-in 0.6s ease-out; }
+.tl-animate del { animation: tl-out 0.6s ease-out; }
+@keyframes tl-in { from { background-color: rgba(242, 200, 120, 0.7); opacity: 0; } to { opacity: 1; } }
+@keyframes tl-out { from { color: var(--ink); } }
+.tl-snapshot { flex: 1; overflow-y: auto; margin-top: 12px; border-top: 1px solid var(--panel-line); padding: 20px 0 30vh; font-size: 17px; }
+.tl-snapshot .ProseMirror { max-width: 780px; margin: 0 auto; }
+.tl-snapshot aside.overflow { display: none !important; }
+.tl-here { background: rgba(242, 200, 120, 0.2); border-radius: 3px; }
+.tl-cut-point { display: inline-block; width: 2px; height: 1em; vertical-align: -2px; background: var(--tl-cutting); }
+@media (prefers-reduced-motion: reduce) { .tl-animate ins, .tl-animate del { animation: none; } }

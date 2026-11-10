@@ -13,10 +13,27 @@ export type EntryKind =
   | 'typed'
   | 'deleted'
   | 'edited'
-  | 'alternative'
+  | 'version-added'
+  | 'version-dropped'
   | 'flipped'
-  | 'ghost'
-  | 'overflow';
+  | 'ghosted'
+  | 'revived'
+  | 'stashed'
+  | 'used';
+
+/** The families the timeline colours by. */
+export const KIND_FAMILY: Record<EntryKind, 'writing' | 'cutting' | 'alternatives' | 'ghost' | 'overflow'> = {
+  typed: 'writing',
+  edited: 'writing',
+  deleted: 'cutting',
+  'version-added': 'alternatives',
+  'version-dropped': 'alternatives',
+  flipped: 'alternatives',
+  ghosted: 'ghost',
+  revived: 'ghost',
+  stashed: 'overflow',
+  used: 'overflow',
+};
 
 export interface HistoryEntry {
   t: number;
@@ -30,7 +47,7 @@ export interface PieceHistory {
   entries: HistoryEntry[];
 }
 
-/** Typing within this many ms of the last keystroke joins the same entry. */
+/** Writing within this many ms of the last change joins the same moment. */
 export const COALESCE_MS = 1000;
 
 export function startHistory(doc: Node): PieceHistory {
@@ -42,9 +59,9 @@ function kindOf(tr: Transaction): EntryKind {
   if (events.length) {
     const k = events[0].kind;
     if (k === 'alt_selected') return 'flipped';
-    if (k === 'alt_added' || k === 'alt_deleted') return 'alternative';
-    if (k === 'ghosted' || k === 'revived') return 'ghost';
-    return 'overflow';
+    if (k === 'alt_added') return 'version-added';
+    if (k === 'alt_deleted') return 'version-dropped';
+    return k;
   }
   let inserts = false;
   let deletes = false;
@@ -66,8 +83,11 @@ export function record(history: PieceHistory, tr: Transaction, now = Date.now())
   const steps = tr.steps.map((s) => s.toJSON() as Record<string, unknown>);
   const last = history.entries[history.entries.length - 1];
   const entries = history.entries.slice();
-  if (last && last.kind === kind && (kind === 'typed' || kind === 'deleted') && now - last.t < COALESCE_MS) {
-    entries[entries.length - 1] = { ...last, t: now, steps: [...last.steps, ...steps] };
+  const writing = (k: EntryKind) => k === 'typed' || k === 'deleted' || k === 'edited';
+  if (last && writing(last.kind) && writing(kind) && now - last.t < COALESCE_MS) {
+    // One burst of writing is one moment, even with a few corrections in it.
+    const merged: EntryKind = last.kind === kind ? kind : 'edited';
+    entries[entries.length - 1] = { ...last, t: now, kind: merged, steps: [...last.steps, ...steps] };
   } else {
     entries.push({ t: now, kind, steps });
   }
