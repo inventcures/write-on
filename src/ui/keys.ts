@@ -43,6 +43,7 @@ export const ACTIONS: { id: ActionId; label: string; combo: string }[] = [
 /** Shortcuts that are part of the editor itself and can't be changed. */
 export const FIXED: [string, string][] = [
   ['Flip the hovered group', 'hover + ← →'],
+  ['Step through the alternatives, in the alternatives panel', '↑ ↓  (or Tab, Shift+Tab)'],
   ['Delete the showing alternative', 'hover + Delete'],
   ['Undo, Redo', 'Ctrl+Z  Ctrl+Shift+Z'],
   ['Bold, Italic', 'Ctrl+B  Ctrl+I'],

@@ -301,3 +301,24 @@ test('continue with Google keeps the piece, goes to Google, and says how it went
   expect(page.url()).toBe('http://localhost:4174/');
   expect(await pieceFile(page)).toContain('Before Google.');
 });
+
+test('↑ and ↓ step through the alternatives in the panel, flipping as they go', async ({ page }) => {
+  await page.keyboard.press('Control+Shift+R');
+  await page.locator('.alt-word', { hasText: 'sketch' }).click();
+  await page.keyboard.press('Control+Shift+A');
+  const panel = page.locator('.alt-panel');
+  await expect(panel).toHaveClass(/open/);
+  const shown = () => page.locator('.ProseMirror p').first().textContent();
+  // Focus starts in the empty row; ↑ goes to the last alternative and shows it.
+  await page.keyboard.press('ArrowUp');
+  await expect(panel.locator('.row.on textarea')).toHaveValue('rough guess');
+  expect(await shown()).toContain('starts as a rough guess');
+  await page.keyboard.press('ArrowUp');
+  await expect(panel.locator('.row.on textarea')).toHaveValue('outline');
+  await page.keyboard.press('ArrowDown');
+  await expect(panel.locator('.row.on textarea')).toHaveValue('rough guess');
+  // From the last alternative, ↓ goes back to the empty row and flips nothing.
+  await page.keyboard.press('ArrowDown');
+  await expect(panel.locator('.row.on textarea')).toHaveValue('rough guess');
+  await expect(panel.locator('textarea').last()).toBeFocused();
+});
