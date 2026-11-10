@@ -288,3 +288,22 @@ tp53: "add user controls - auth, login, history, event log (of ALL your writing)
 ### Q41. tp53: "shift + / = ? should open the keyboard shortcut list". But this is a writing app: a writer needs to type ?.
 - **Answer:** a bare `?` opens the shortcuts whenever you are not typing (focus outside the page, a panel's text box, or a form). In the page it is always a question mark. Ctrl+? (Ctrl+Shift+/) opens the list from anywhere, the page included, and can be rebound like the other shortcuts. Both are listed in the sheet itself.
 - **Why:** the convention (Gmail, GitHub, YouTube) is `?` for help, and every one of those apps also leaves `?` alone inside text fields. Taking `?` away from writers would break the thing the app exists for.
+
+## Round 11: Continue with Google (2026-11-10)
+
+### Q42. tp53: "enable Google login and sign up also." One button or two?
+- **Answer:** one, "Continue with Google". Google decides whether the writer is new; we just make the account the first time. Two buttons would ask the writer a question that has only one answer.
+- **Why server-side:** the client secret stays on Railway, like the Gemini key. Full reasons in ADR-0009.
+
+### Q43. An account with a password already exists for the same email. Join or refuse?
+- **Answer:** join, but only when Google says the email is verified. Refusing would leave writers locked out of their own writing for using the "wrong" button. A verified Google email proves the same thing a password sign-up would have needed to prove.
+
+## Round 12: the video and where this came from (2026-11-10)
+
+### Q44. The orientation video is ready (v2, 4:54). Where does it live?
+- **Answer:** in `public/` as `explainer.mp4`, `.jpg` and `.vtt` (12 MB), served by the app, so the welcome card and the project page both play it from https://write-on.up.railway.app/explainer.mp4. It is our own manim drawing with no frames from Fried's video, so it may be in the public repo. Its source is in `explainer/`.
+- The `?` button keeps reopening the welcome card, because the video's narration says so.
+
+### Q45. tp53's origin story: how much of it goes in the app?
+- **Answer:** two lines at the foot of the welcome card (built from the day Fable 5.2 came out, on Fried's Write_On idea, to write more thoughtfully without handing the thinking to an LLM), with a link to the project page for the full story. The card is for learning the editor; the story belongs on the page.
+- **Also fixed:** the card said everything stays in this browser, which stopped being true with accounts. It now says "unless you sign in".

@@ -43,6 +43,8 @@ export async function openStore(dir) {
     CREATE TABLE IF NOT EXISTS timelines (
       user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, piece_id TEXT NOT NULL,
       data TEXT NOT NULL, updated INTEGER NOT NULL, PRIMARY KEY (user_id, piece_id));
+    CREATE TABLE IF NOT EXISTS google_ids (
+      sub TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE);
   `);
   return new Store(db);
 }
@@ -57,7 +59,11 @@ async function hashPassword(password) {
 
 async function checkPassword(password, stored) {
   const [scheme, salt, key] = stored.split('$');
-  if (scheme !== 'scrypt') return false;
+  if (scheme !== 'scrypt' || !salt || !key) {
+    // A Google-only account has no password. Hash anyway, so timing looks the same.
+    await scrypt(password, 'no-password', 64, { N: 16384, r: 8, p: 1 });
+    return false;
+  }
   const want = Buffer.from(key, 'base64');
   const got = await scrypt(password, Buffer.from(salt, 'base64'), want.length, { N: 16384, r: 8, p: 1 });
   return timingSafeEqual(got, want);
@@ -87,6 +93,26 @@ export class Store {
       return null;
     }
     return (await checkPassword(password, row.pass)) ? { id: row.id, email: row.email } : null;
+  }
+
+  /**
+   * The account for a Google sign-in: the one already linked to this Google
+   * account, else the account with the same (Google-verified) email, which is
+   * then linked, else a new account with no password.
+   */
+  userForGoogle(sub, email, now = Date.now()) {
+    const linked = this.db.prepare('SELECT u.id, u.email FROM google_ids g JOIN users u ON u.id = g.user_id WHERE g.sub = ?').get(sub);
+    if (linked) return { id: linked.id, email: linked.email, created: false };
+    let row = this.db.prepare('SELECT id, email FROM users WHERE email = ?').get(email);
+    let created = false;
+    if (!row) {
+      row = { id: randomBytes(12).toString('hex'), email };
+      // An empty password can never match: checkPassword wants the scrypt scheme.
+      this.db.prepare('INSERT INTO users (id, email, pass, created) VALUES (?, ?, ?, ?)').run(row.id, email, '', now);
+      created = true;
+    }
+    this.db.prepare('INSERT INTO google_ids (sub, user_id) VALUES (?, ?)').run(sub, row.id);
+    return { id: row.id, email: row.email, created };
   }
 
   createSession(userId, now = Date.now()) {

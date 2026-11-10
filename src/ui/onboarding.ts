@@ -165,9 +165,20 @@ export class Onboarding {
     write.type = 'button';
     write.onclick = () => this.closeWelcome();
     actions.append(tour, write);
-    const fine = el('p', 'welcome-fine', 'Everything you write stays in this browser. Press ? at the top right to see this again.');
+    const fine = el('p', 'welcome-fine', 'What you write stays in this browser unless you sign in, in Your writing. Press ? at the top right to see this again.');
+    // tp53's origin story, cut to two lines; the full one is on the project page.
+    const origin = el('p', 'welcome-origin');
+    const story = document.createElement('a');
+    story.href = 'https://inventcures.github.io/write-on/';
+    story.target = '_blank';
+    story.rel = 'noopener noreferrer';
+    story.textContent = 'The story';
+    origin.append(
+      'Built from 10 November 2026, the day Fable 5.2 came out, on the idea Jason Fried showed in Write_On: to write more, and more thoughtfully, without handing the thinking to an LLM. ',
+      story,
+    );
 
-    box.append(h, lede, pair, video, ideas, actions, fine);
+    box.append(h, lede, pair, video, ideas, actions, fine, origin);
     backdrop.append(box);
     backdrop.addEventListener('mousedown', (e) => {
       if (e.target === backdrop) this.closeWelcome();

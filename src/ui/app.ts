@@ -361,6 +361,7 @@ export function startApp(root: HTMLElement): void {
       },
       signIn,
       signOut,
+      signInWithGoogle,
       bringBrowserPieces,
       browserPiecesNotInAccount: async () => {
         if (library.kind !== 'account') return 0;
@@ -441,6 +442,14 @@ export function startApp(root: HTMLElement): void {
     } catch (err) {
       return err instanceof ApiError ? err.message : 'Couldn’t sign in.';
     }
+  }
+
+  async function signInWithGoogle(): Promise<void> {
+    // Everything is saved (and the open piece autosaved) before leaving, so the
+    // writer comes back to the same page, which then moves into their account.
+    await flushSaves();
+    files.autosave(toPieceFile(view.state.doc), pieceName);
+    location.assign('/api/auth/google');
   }
 
   async function signOut(): Promise<void> {
@@ -712,10 +721,14 @@ export function startApp(root: HTMLElement): void {
   void document.fonts?.ready.then(() => requestAnimationFrame(redraw));
 
   startDoc = view.state.doc;
+  // Back from Google's sign-in page: say how it went, and tidy the address bar.
+  const back = new URLSearchParams(location.search).get('signin');
+  if (back !== null) history.replaceState(null, '', location.pathname + location.hash);
   ready = attachTimeline(view.state.doc).then(async () => {
     me = await whoAmI();
     if (me.user) await useAccount(me.user.email, !restored);
     else await saveToLibrary();
+    if (back !== null) notify(googleNote(back, me.user?.email), back.startsWith('google') ? 3500 : 6000);
   });
   updateCount();
   setOverflowEditable();
@@ -724,4 +737,18 @@ export function startApp(root: HTMLElement): void {
   if (!hasBeenWelcomed()) onboarding.showWelcome();
   // Exposed for end-to-end tests and the curious.
   (window as unknown as { writeOn: unknown }).writeOn = { view, toPieceFile: () => toPieceFile(view.state.doc) };
+}
+
+/** What to tell the writer when Google sends them back. */
+export function googleNote(result: string, email?: string): string {
+  if (result === 'google-new' && email) return `Account made with Google (${email}). Your writing now saves to it.`;
+  if (result === 'google' && email) return `Signed in with Google as ${email}.`;
+  return (
+    {
+      cancelled: 'Google sign-in was cancelled. Nothing changed.',
+      unverified: 'Google says that email isn’t verified, so it can’t sign you in here.',
+      busy: 'Too many tries. Wait a few minutes.',
+      expired: 'That Google sign-in took too long. Try again.',
+    } as Record<string, string>
+  )[result] ?? 'Google sign-in didn’t work. Try again, or use email and password.';
 }

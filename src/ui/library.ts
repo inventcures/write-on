@@ -197,6 +197,8 @@ export class AccountLibrary implements Library {
 
 export interface Me {
   accounts: boolean;
+  /** "Continue with Google" is switched on (ADR-0009). */
+  google?: boolean;
   user: { email: string } | null;
 }
 
