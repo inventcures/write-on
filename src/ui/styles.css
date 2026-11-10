@@ -285,3 +285,19 @@ body.read .count::after { content: '  ·  Ctrl+Shift+R or click here for the too
 .yw-act:disabled { opacity: 0.35; cursor: default; }
 .yw-empty { color: var(--ink-faint); font-size: 14px; padding: 14px 0; }
 @media (max-width: 640px) { .yw-account { align-items: stretch; margin-left: 0; width: 100%; } .yw-signin input { width: 100%; } .yw-note { text-align: left; } .yw-piece { grid-template-columns: 1fr; grid-template-areas: 'title' 'meta' 'acts'; } }
+
+/* Speech (ADR-0010) */
+.speak-act.on { color: var(--ink); border-color: var(--ink); }
+.listening { position: fixed; left: 50%; bottom: 64px; transform: translateX(-50%); z-index: 40; display: flex; align-items: center; gap: 10px; max-width: min(640px, calc(100vw - 32px)); padding: 8px 10px 8px 14px; border: 1px solid var(--panel-line); border-radius: 999px; background: var(--panel, var(--page)); color: var(--ink-soft); font-size: 13px; box-shadow: 0 8px 30px rgb(0 0 0 / 0.35); }
+.listening[hidden] { display: none; }
+body.speaking .notice { bottom: 112px; }
+.listening-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ink); flex: none; animation: listening 1.2s ease-in-out infinite; }
+.listening-what { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-style: italic; }
+.listening button { border: 1px solid var(--panel-line); border-radius: 999px; padding: 3px 10px; color: var(--ink); flex: none; }
+@keyframes listening { 50% { opacity: 0.3; } }
+@media (prefers-reduced-motion: reduce) { .listening-dot { animation: none; } }
+.yw-recs { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 10px; grid-column: 1 / -1; }
+.yw-rec { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 12px; color: var(--ink-soft); }
+.yw-rec audio { height: 32px; max-width: 100%; }
+.yw-rec a.yw-act { text-decoration: none; }
+.yw-rec-heard { flex-basis: 100%; margin: 0; color: var(--ink-faint); font-style: italic; }

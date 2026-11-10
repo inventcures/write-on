@@ -20,7 +20,10 @@ A pairing partner for your writing, as in [pair programming](https://martinfowle
 | Stash in Overflow / open Overflow / use from Overflow | Ctrl+Shift+X / Ctrl+Shift+D / Ctrl+Return |
 | Timeline | Ctrl+Shift+L |
 | Your writing: every piece and moment on one line; sign in | Ctrl+Shift+H, or the button by the word count |
+| Speak: your words at the caret, or a new alternative when that panel is open | Ctrl+Shift+M, or 🎙 Speak |
 | Save / open (one Markdown file) | Ctrl+S / Ctrl+O |
+
+Speaking uses the browser's own speech-to-text (Chrome, Edge and Safari; not Firefox). Say "comma", "full stop", "question mark" or "new paragraph" for punctuation. The raw recording of each spell of speaking is kept in this browser with the piece; find it under the piece in Your writing to play, download or delete it.
 
 Press ? (when you're not typing in the text) or Ctrl+? anywhere for the list of shortcuts. Every shortcut can be changed in the shortcuts sheet (the ⌨ icon), which also explains the colours: green kept, amber undecided, red rejected.
 

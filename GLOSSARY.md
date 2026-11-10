@@ -60,6 +60,10 @@ _Avoid_: Stash (as a noun), scratchpad, clipboard
 To move text out of the piece into Overflow. Its reverse is **Use**: moving text from Overflow back into the piece.
 _Avoid_: Cut, park
 
+**Speak**:
+To dictate: the writer's spoken words go into the page at the caret, or become a new variant when the alternatives panel is open. They are the writer's own text, never a machine variant. Each spell of speaking keeps its **Recording**, the raw audio plus what was heard, in this browser with the piece.
+_Avoid_: Voice mode, transcribe
+
 ## Learning (later phases)
 
 **Event log**:

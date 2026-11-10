@@ -307,3 +307,15 @@ tp53: "add user controls - auth, login, history, event log (of ALL your writing)
 ### Q45. tp53's origin story: how much of it goes in the app?
 - **Answer:** two lines at the foot of the welcome card (built from the day Fable 5.2 came out, on Fried's Write_On idea, to write more thoughtfully without handing the thinking to an LLM), with a link to the project page for the full story. The card is for learning the editor; the story belongs on the page.
 - **Also fixed:** the card said everything stays in this browser, which stopped being true with accounts. It now says "unless you sign in".
+
+## Round 13: speech (2026-11-10)
+
+### Q46. tp53: "should we add the ability to add speech in WO?"
+- **Answer:** yes, as the writer's own words. Speak dictates at the caret, or into a new alternative when that panel is open, and keeps the raw recording with the piece in this browser. It uses the browser's own recognition: no key, no server of ours. Full reasons in ADR-0010.
+- **Why not have the machine tidy what was said:** that would be writing for the writer. We add only what a typist adds: spaces, capitals, and the punctuation the writer said out loud.
+
+### Q47. Should a spoken alternative show in place, like a typed one, or wait like a machine suggestion?
+- **Answer:** in place, like a typed one. It is the writer's choice the moment they say it, and the original is kept beside it, one flip away. Only machine variants wait.
+
+### Q48. Do recordings go to the account?
+- **Answer:** not yet. They stay in this browser, even when signed in. Voices are more personal than text and much bigger. If tp53 wants them in the account, that would be an explicit opt-in.
