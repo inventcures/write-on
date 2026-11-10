@@ -322,3 +322,29 @@ test('↑ and ↓ step through the alternatives in the panel, flipping as they g
   await expect(panel.locator('.row.on textarea')).toHaveValue('rough guess');
   await expect(panel.locator('textarea').last()).toBeFocused();
 });
+
+test('visits are counted on the live site only, with the utm_ tags and nothing written', async ({ page }) => {
+  const asked: string[] = [];
+  await page.route('https://www.googletagmanager.com/**', (r) => {
+    asked.push(r.request().url());
+    return r.fulfill({ contentType: 'text/javascript', body: '' });
+  });
+  // Locally: nothing is counted.
+  await page.reload();
+  await page.waitForTimeout(300);
+  expect(asked).toHaveLength(0);
+  // Served under the live host name: one page view, with the tags and without the sign-in word.
+  await page.route('http://write-on.up.railway.app/**', async (r) => {
+    const local = r.request().url().replace('http://write-on.up.railway.app', 'http://localhost:4174');
+    return r.fulfill({ response: await r.fetch({ url: local }) });
+  });
+  await page.goto('http://write-on.up.railway.app/?utm_source=linkedin&utm_campaign=write-on-launch-2026-11&signin=cancelled');
+  await expect.poll(() => asked.length).toBe(1);
+  expect(asked[0]).toContain('id=G-YQXJ75PNDQ');
+  const config = await page.evaluate(() => JSON.stringify(Array.from((window as unknown as { dataLayer: ArrayLike<unknown>[] }).dataLayer, (a) => Array.from(a))));
+  expect(config).toContain('"page_location":"http://write-on.up.railway.app/?utm_source=linkedin&utm_campaign=write-on-launch-2026-11"');
+  expect(config).not.toContain('signin');
+  await page.keyboard.press('Control+Shift+R');
+  await page.keyboard.type('secret words');
+  expect(JSON.stringify(await page.evaluate(() => (window as unknown as { dataLayer: unknown[] }).dataLayer.length))).toBe('2');
+});

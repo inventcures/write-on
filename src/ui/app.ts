@@ -810,7 +810,11 @@ export function startApp(root: HTMLElement): void {
   startDoc = view.state.doc;
   // Back from Google's sign-in page: say how it went, and tidy the address bar.
   const back = new URLSearchParams(location.search).get('signin');
-  if (back !== null) history.replaceState(null, '', location.pathname + location.hash);
+  if (back !== null) {
+    const url = new URL(location.href);
+    url.searchParams.delete('signin');
+    history.replaceState(null, '', url.pathname + url.search + url.hash);
+  }
   ready = attachTimeline(view.state.doc).then(async () => {
     me = await whoAmI();
     if (me.user) await useAccount(me.user.email, !restored);

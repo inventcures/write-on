@@ -341,3 +341,8 @@ tp53: "add user controls - auth, login, history, event log (of ALL your writing)
 
 ### Q53. tp53: "add up down arrow also to cycle through the suggestions, instead of only tab & shift tab".
 - **Answer:** in the alternatives panel, ↑ and ↓ move between rows and flip as they go, like Tab and Shift+Tab. In a row that wraps onto several lines (a sentence or paragraph), they first move the caret within it, and leave only from its first or last line, so editing a long alternative still works.
+
+## Round 16: counting visits (2026-11-10)
+
+### Q54. tp53: yes to counting visits to the app, "maybe in GA".
+- **Answer:** one GA4 page view per visit, to the same property as the homepage. It reports only the page and its `utm_` tags, only on the live site, and never for browsers that send Do Not Track or GPC. Nothing written in the editor, and nothing about accounts, is ever sent. App visits are told apart from homepage visits by hostname. Full reasons in ADR-0012.
