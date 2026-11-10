@@ -62,6 +62,10 @@ The spend estimate lives in `DATA_DIR/gemini-usage.json`. Without `DATA_DIR`, it
 
 Limits: 30 requests an hour per caller, 500 a day in all.
 
+## Visits
+
+On the live site only, each visit sends one page view to Google Analytics (ADR-0012): the page, the referrer and any `utm_` tags. Never anything written in the editor, and nothing about accounts. Browsers that send Do Not Track or Global Privacy Control aren't counted.
+
 ## Accounts (optional)
 
 Off unless the server has lasting storage (ADR-0008). On Railway, add a volume mounted at `/data` and set `DATA_DIR=/data`. Writers then sign in with email and password; each writer's pieces, timelines and event log are theirs alone. Signed out, everything stays in the browser as before.

@@ -172,7 +172,7 @@ export class Onboarding {
     write.type = 'button';
     write.onclick = () => this.closeWelcome();
     actions.append(tour, write);
-    const fine = el('p', 'welcome-fine', 'What you write stays in this browser unless you sign in, in Your writing. Press ? at the top right to see this again.');
+    const fine = el('p', 'welcome-fine', 'What you write stays in this browser unless you sign in, in Your writing. Visits are counted; your writing never is. Press ? at the top right to see this again.');
     // tp53's origin story, cut to two lines; the full one is on the project page.
     const origin = el('p', 'welcome-origin');
     const story = document.createElement('a');
