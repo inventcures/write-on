@@ -1,0 +1,121 @@
+:root {
+  --page: #050a1c;
+  --ink: #f5d1c0;
+  --ink-soft: rgba(245, 209, 192, 0.55);
+  --ink-faint: rgba(245, 209, 192, 0.28);
+  --word: #b69cff;
+  --sentence: #f29bb8;
+  --paragraph: #c98a5b;
+  --panel: #0a1128;
+  --panel-line: rgba(245, 209, 192, 0.14);
+  --hover: rgba(182, 156, 255, 0.12);
+  --mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  --hand: 'Caveat', 'Bradley Hand', cursive;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; background: var(--page); color: var(--ink); }
+body { font: 400 20px/1.6 var(--mono); -webkit-font-smoothing: antialiased; overflow-y: auto; scrollbar-width: none; }
+body::-webkit-scrollbar { display: none; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0; }
+button:focus-visible, textarea:focus-visible { outline: 1px dashed var(--ink-soft); outline-offset: 3px; }
+
+/* The page: one scrolling column, edges dissolving into the chrome. */
+/* The page scrolls with the window, so the fixed panels share the root stacking context. */
+.page { position: static; }
+.column { position: relative; width: min(780px, calc(100vw - 32px)); margin: 0 auto; padding: 22vh 0 40vh; }
+.fade { position: fixed; left: 0; right: 0; height: 18vh; pointer-events: none; z-index: 2; }
+.fade.top { top: 0; background: linear-gradient(var(--page) 25%, transparent); }
+.fade.bottom { bottom: 0; background: linear-gradient(transparent, var(--page) 75%); }
+
+.ProseMirror { outline: none; white-space: pre-wrap; word-wrap: break-word; caret-color: var(--ink); }
+.ProseMirror p { margin: 0 0 1.1em; }
+.ProseMirror h1, .ProseMirror h2, .ProseMirror h3 { font-weight: 600; line-height: 1.3; margin: 0 0 0.9em; }
+.ProseMirror h1 { font-size: 1.5em; }
+.ProseMirror h2 { font-size: 1.25em; }
+.ProseMirror h3 { font-size: 1.1em; }
+.ProseMirror a { color: inherit; text-decoration-color: var(--ink-faint); }
+.ProseMirror ::selection { background: rgba(182, 156, 255, 0.3); }
+
+.ghost { opacity: 0.11; }
+.alt-hover { background: var(--hover); border-radius: 3px; }
+.alt-block-hover { background: rgba(201, 138, 91, 0.07); border-radius: 4px; }
+.dim-near { opacity: 0.66; transition: opacity 0.2s; }
+.dim-far { opacity: 0.36; transition: opacity 0.2s; }
+.alt-flash { animation: settle 0.22s ease-out; }
+@keyframes settle { from { filter: blur(3px); opacity: 0.15; } to { filter: none; opacity: 1; } }
+
+/* Marks are drawn by the overlay, a pen-like SVG layer over the column. */
+.marks { position: absolute; inset: 0; overflow: visible; pointer-events: none; }
+body.read .marks, body.marks-off .marks { display: none; }
+
+/* Chrome: top and bottom rows. Read mode shows only the word count. */
+.chrome { position: fixed; left: 0; right: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; font-size: 13px; color: var(--ink-soft); pointer-events: none; }
+.chrome > * { pointer-events: auto; }
+.chrome.top { top: 0; }
+.chrome.bottom { bottom: 0; }
+.chrome { transition: left 0.22s ease, right 0.22s ease; }
+body.overflow-open:not(.read) .chrome { right: 280px; }
+body.alt-open:not(.read) .chrome { left: 280px; }
+.chrome .group { display: flex; gap: 16px; align-items: center; }
+.chrome button { color: var(--ink-soft); transition: color 0.15s; }
+.chrome button:hover, .chrome button[aria-pressed='true'] { color: var(--ink); }
+.count { color: var(--ink-faint); }
+.count:hover { color: var(--ink-soft); }
+body.read .tool { visibility: hidden; }
+.xyz { font-family: var(--hand); font-size: 20px; letter-spacing: 1px; }
+
+/* Side panels. */
+.panel { position: fixed; top: 0; bottom: 0; width: 280px; background: var(--panel); z-index: 6; display: flex; flex-direction: column; font-size: 15px; transition: transform 0.22s ease; }
+.panel h2, .panel .tabs { font: 600 26px/1 var(--hand); margin: 0; }
+.panel footer { font-size: 12px; color: var(--ink-faint); padding: 12px 18px; border-top: 1px solid var(--panel-line); }
+.alt-panel { left: 0; border-right: 1px solid var(--panel-line); transform: translateX(-100%); }
+.alt-panel.open { transform: none; }
+.tabs { display: flex; gap: 14px; padding: 22px 18px 14px; }
+.tabs button { font: inherit; color: var(--ink-faint); }
+.tabs button.on { color: var(--ink); }
+.rows { flex: 1; overflow-y: auto; padding: 4px 12px; }
+.row { display: flex; gap: 8px; align-items: flex-start; padding: 6px; border-radius: 6px; }
+.row .dot { margin-top: 9px; width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid currentColor; flex: none; }
+.row.on .dot { background: currentColor; }
+.row textarea { flex: 1; resize: none; background: transparent; border: 0; color: var(--ink); font: 15px/1.5 var(--mono); padding: 2px 0; overflow: hidden; }
+.row textarea::placeholder { color: var(--ink-faint); }
+.row.on { background: rgba(245, 209, 192, 0.05); }
+.grain-word { color: var(--word); }
+.grain-sentence { color: var(--sentence); }
+.grain-paragraph { color: var(--paragraph); }
+
+/* Overflow is part of the document, shown as the right-hand panel. */
+.ProseMirror aside.overflow { position: fixed; top: 0; bottom: 0; right: 0; width: 280px; background: var(--panel); border-left: 1px solid var(--panel-line); z-index: 6; display: none; flex-direction: column; font-size: 15px; line-height: 1.5; white-space: pre-wrap; }
+body.overflow-open:not(.read) .ProseMirror aside.overflow { display: flex; }
+.overflow h2 { font: 600 26px/1 var(--hand); margin: 0; padding: 22px 18px 14px; user-select: none; }
+.overflow .overflow-body { flex: 1; overflow-y: auto; padding: 0 18px 12px; outline: none; }
+.overflow .overflow-body p { margin: 0 0 0.9em; }
+.overflow footer { font-size: 12px; color: var(--ink-faint); padding: 12px 18px; border-top: 1px solid var(--panel-line); user-select: none; }
+
+/* Menus, sheets and notices. */
+.menu { position: fixed; z-index: 20; background: var(--panel); border: 1px solid var(--panel-line); border-radius: 8px; padding: 6px; font-size: 14px; min-width: 260px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); }
+.menu button { display: flex; width: 100%; justify-content: space-between; gap: 18px; padding: 7px 10px; border-radius: 5px; text-align: left; }
+.menu button:hover, .menu button:focus { background: rgba(245, 209, 192, 0.08); outline: none; }
+.menu kbd, .sheet kbd { font: 12px var(--mono); color: var(--ink-faint); }
+.sheet-backdrop { position: fixed; inset: 0; z-index: 30; background: rgba(5, 10, 28, 0.86); display: flex; align-items: center; justify-content: center; padding: 16px; }
+.sheet { background: var(--panel); border: 1px solid var(--panel-line); border-radius: 10px; padding: 22px 26px; max-width: 720px; width: 100%; max-height: 90vh; overflow: auto; font-size: 14px; }
+.sheet h2 { font: 600 30px/1 var(--hand); margin: 0 0 14px; }
+.sheet table { width: 100%; border-collapse: collapse; }
+.sheet td { padding: 5px 0; border-bottom: 1px solid var(--panel-line); }
+.sheet td:last-child { text-align: right; }
+.sheet pre { white-space: pre-wrap; word-break: break-word; font-size: 13px; margin: 0; color: var(--ink-soft); }
+.notice { position: fixed; bottom: 56px; left: 50%; transform: translateX(-50%); z-index: 25; background: var(--panel); border: 1px solid var(--panel-line); border-radius: 8px; padding: 10px 16px; font-size: 13px; max-width: min(560px, calc(100vw - 32px)); }
+
+.spark { position: fixed; width: 4px; height: 4px; border-radius: 50%; pointer-events: none; z-index: 40; }
+
+@media (prefers-reduced-motion: reduce) {
+  .alt-flash { animation: none; }
+  .panel, .dim-near, .dim-far { transition: none; }
+}
+
+@media (max-width: 700px) {
+  body { font-size: 17px; }
+  .panel, .ProseMirror aside.overflow { width: min(280px, 85vw); }
+}
