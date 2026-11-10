@@ -5,6 +5,7 @@
  */
 import { KIND_FAMILY, type EntryKind } from '../core/moments';
 import type { Library, Me, PieceActivity, PieceSummary } from './library';
+import { clock as mmss, type Recording } from './speech';
 
 export interface WritingHost {
   library(): Library;
@@ -16,6 +17,9 @@ export interface WritingHost {
   signOut(): Promise<void>;
   /** Leave for Google's sign-in page; the app comes back signed in. */
   signInWithGoogle(): Promise<void>;
+  /** The raw recordings kept with a piece in this browser, newest first. */
+  recordings(pieceId: string): Promise<Recording[]>;
+  deleteRecording(id: string): Promise<void>;
   /** Copy the pieces kept in this browser into the account. Returns how many. */
   bringBrowserPieces(): Promise<number>;
   browserPiecesNotInAccount(): Promise<number>;
@@ -373,6 +377,7 @@ export class WritingView {
         const acts = el('span', 'yw-acts');
         acts.append(replay, del);
         li.append(open, meta, acts);
+        void this.renderRecordings(li, acts, p.id);
         return li;
       }),
     );
@@ -454,6 +459,52 @@ export class WritingView {
       this.account.append(or);
     }
     this.account.append(form, note);
+  }
+
+  /** "Recordings (n)" under a piece: play, download or delete what was said. */
+  private async renderRecordings(li: HTMLElement, acts: HTMLElement, pieceId: string): Promise<void> {
+    const recs = await this.host.recordings(pieceId);
+    if (!recs.length) return;
+    const b = el('button', 'yw-act', `Recordings (${recs.length})`);
+    b.type = 'button';
+    b.title = 'What you said while writing this piece, kept in this browser';
+    acts.prepend(b);
+    const box = el('ol', 'yw-recs');
+    box.hidden = true;
+    b.onclick = () => {
+      box.hidden = !box.hidden;
+      if (!box.hidden && !box.childElementCount) this.fillRecordings(box, recs, b);
+    };
+    li.append(box);
+  }
+
+  private fillRecordings(box: HTMLElement, recs: Recording[], button: HTMLElement): void {
+    for (const r of recs) {
+      const item = el('li', 'yw-rec');
+      const url = URL.createObjectURL(r.blob);
+      const audio = el('audio');
+      audio.controls = true;
+      audio.preload = 'none';
+      audio.src = url;
+      const when = new Date(r.t);
+      const head = el('span', 'yw-rec-when', `${when.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}, ${when.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })} · ${mmss(r.ms)}`);
+      const save = el('a', 'yw-act', 'Download');
+      save.href = url;
+      save.download = `recording-${when.toISOString().slice(0, 16).replace(/[:T]/g, '-')}.${r.type.includes('mp4') ? 'm4a' : r.type.includes('ogg') ? 'ogg' : 'webm'}`;
+      const del = el('button', 'yw-act yw-del', 'Delete');
+      del.type = 'button';
+      del.onclick = async () => {
+        await this.host.deleteRecording(r.id);
+        URL.revokeObjectURL(url);
+        item.remove();
+        const left = box.childElementCount;
+        if (left) button.textContent = `Recordings (${left})`;
+        else (box.remove(), button.remove());
+      };
+      const heard = el('p', 'yw-rec-heard', r.heard ? `“${r.heard}”` : 'Nothing was turned into text.');
+      item.append(head, audio, save, del, heard);
+      box.append(item);
+    }
   }
 
   private async renderBring(): Promise<void> {

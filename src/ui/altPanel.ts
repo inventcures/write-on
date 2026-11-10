@@ -13,6 +13,7 @@ import {
   type GroupTarget,
 } from '../core/groups';
 import { wordAt, sentenceRanges } from '../core/text';
+import { spokenPunctuation } from '../core/dictation';
 import type { Grain } from '../core/schema';
 import { lookKey, setLook } from './viewPlugins';
 import { accessCode, contextAround, requestSuggestions, setAccessCode, suggestionsEnabled } from './suggestions';
@@ -280,6 +281,20 @@ export class AltPanel {
     }
     this.renderAsk(added ? 'Added in blue under yours. Flip to try one; yours stays until you do.' : 'Nothing new came back.');
     this.ask.querySelector('button')?.focus();
+  }
+
+  /** A spoken alternative: it goes in the empty last row, as if typed there. */
+  addSpoken(text: string): void {
+    if (!this.isOpen || !text.trim()) return;
+    if (this.rows.contains(document.activeElement)) (document.activeElement as HTMLElement).blur();
+    const areas = this.rows.querySelectorAll('textarea');
+    const last = areas[areas.length - 1] as HTMLTextAreaElement | undefined;
+    if (!last) return;
+    // A word goes in as said; a sentence or paragraph gets its punctuation and capital.
+    const said = this.grain() === 'word' ? text.trim().replace(/[.?!,]$/, '') : spokenPunctuation(text).replace(/\n+/g, ' ');
+    last.value = this.grain() === 'word' ? said : said.charAt(0).toUpperCase() + said.slice(1);
+    this.onInput(last);
+    this.render(false);
   }
 
   private onFocusRow(index: number): void {

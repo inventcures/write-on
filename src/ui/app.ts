@@ -26,6 +26,9 @@ import { Keybindings, keybindingsEditor, pretty, type ActionId } from './keys';
 import { colourKey } from './colours';
 import { hasBeenWelcomed, Onboarding, type TourSignal } from './onboarding';
 import { suggestionsEnabled } from './suggestions';
+import { clock, Listener, recordings, deleteRecording, speechSupported } from './speech';
+import { fitDictated } from '../core/dictation';
+import { splitBlock } from 'prosemirror-commands';
 import { closeMenu, closeSheet, isSheetOpen, notify, showMenu, showSheet } from './menus';
 import { drawMarks, groupRect } from './overlay';
 import { isMuted, setMuted, tick } from './sound';
@@ -153,11 +156,19 @@ export function startApp(root: HTMLElement): void {
     tour(button('Ghost', 'Ghost it / revive it', () => ghost(), 'tool act', 'ghost'), 'ghost'),
     tour(button('Stash', 'Stash the selection in Overflow', () => doStash(), 'tool act', 'stash'), 'stash'),
   );
+  // Speech (ADR-0010): only where the browser can turn speech into text.
+  const speakBtn = button('🎙 Speak', 'Speak: your words go in at the caret, or into a new alternative when that panel is open', () => void toggleSpeech(), 'tool act speak-act', 'speak');
+  speakBtn.hidden = !speechSupported();
+  actions.append(speakBtn);
+  const listening = document.createElement('div');
+  listening.className = 'listening';
+  listening.hidden = true;
+  listening.setAttribute('role', 'status');
   for (const b of actions.querySelectorAll('button')) b.addEventListener('mousedown', (e) => e.preventDefault());
   const xyz = button('XYZ', 'Overflow', () => toggleOverflow(), 'tool xyz', 'overflow');
   bottom.append(left, actions, xyz);
 
-  root.append(page, fadeTop, fadeBottom, top, bottom);
+  root.append(page, fadeTop, fadeBottom, top, bottom, listening);
   const onboarding = new Onboarding(root, {
     showTools: () => {
       if (body.classList.contains('read')) toggleRead();
@@ -362,6 +373,8 @@ export function startApp(root: HTMLElement): void {
       signIn,
       signOut,
       signInWithGoogle,
+      recordings: (id) => recordings(id),
+      deleteRecording,
       bringBrowserPieces,
       browserPiecesNotInAccount: async () => {
         if (library.kind !== 'account') return 0;
@@ -499,6 +512,77 @@ export function startApp(root: HTMLElement): void {
       if (loc && (selection.empty || (selection.from >= loc.from && selection.to <= loc.to))) id = at;
     }
     if (!panel.openForSelection(id)) notify('Put the caret in a word, or select a sentence or paragraph, first.', 3000);
+  }
+
+  // Speech: the writer's own words, spoken. In the page they go in at the caret
+  // as they are heard; in the alternatives panel they become one new alternative.
+  let listener: Listener | null = null;
+
+  function showListening(heard: string, into: 'page' | 'alternative'): void {
+    listening.hidden = false;
+    const dot = document.createElement('span');
+    dot.className = 'listening-dot';
+    const what = document.createElement('span');
+    what.className = 'listening-what';
+    what.textContent = heard || (into === 'page' ? 'Listening. Speak, and your words go in at the caret.' : 'Listening. Say another way to put it.');
+    const stop = document.createElement('button');
+    stop.type = 'button';
+    stop.textContent = 'stop';
+    stop.title = `Stop listening (${pretty(keys.combo('speak'))})`;
+    stop.addEventListener('mousedown', (e) => e.preventDefault());
+    stop.onclick = () => void toggleSpeech();
+    listening.replaceChildren(dot, what, stop);
+  }
+
+  function insertSpoken(said: string): void {
+    const { $from } = view.state.selection;
+    let text = fitDictated($from.parent.textBetween(0, $from.parentOffset, ' '), said);
+    if (!text) return;
+    // Said in the middle of a line: keep a space before the words that follow.
+    const next = $from.parent.textBetween($from.parentOffset, Math.min($from.parent.content.size, $from.parentOffset + 1), ' ');
+    if (/^[\p{L}\p{N}]/u.test(next) && !/\s$/.test(text)) text += ' ';
+    text.split(/\n+/).forEach((part, i) => {
+      if (i > 0) exec(splitBlock);
+      if (part) view.dispatch(view.state.tr.insertText(part));
+    });
+    view.dom.scrollIntoView?.call(view.dom, { block: 'nearest' });
+  }
+
+  async function toggleSpeech(): Promise<void> {
+    if (listener?.listening) {
+      const kept = await listener.stop();
+      if (kept) notify(`Kept the recording (${clock(kept.ms)}) in this browser. It is under this piece in Your writing.`, 4500);
+      return;
+    }
+    if (!speechSupported()) return notify('This browser can’t turn speech into text. Chrome, Edge and Safari can.', 4000);
+    if (body.classList.contains('read')) toggleRead();
+    const into: 'page' | 'alternative' = panel.isOpen ? 'alternative' : 'page';
+    let spoken = '';
+    try {
+      if (!localStorage.getItem('write-on:speech-noted')) {
+        localStorage.setItem('write-on:speech-noted', '1');
+        notify('Your browser turns your speech into text, and may send the sound to its maker (Google for Chrome, Apple for Safari) to do it. The recording itself stays in this browser.', 9000);
+      }
+    } catch {
+      /* no storage: the note shows again next time */
+    }
+    listener = new Listener(String(view.state.doc.attrs.id), {
+      final: (said) => {
+        if (into === 'page') insertSpoken(said);
+        else spoken = `${spoken} ${said}`.trim();
+      },
+      interim: (heard) => listening.hidden || showListening(into === 'alternative' ? `${spoken} ${heard}`.trim() : heard, into),
+      end: (error) => {
+        listening.hidden = true;
+        speakBtn.classList.remove('on');
+        if (into === 'alternative' && spoken) panel.addSpoken(spoken);
+        if (error) notify(error, 6000);
+        listener = null;
+      },
+    });
+    showListening('', into);
+    speakBtn.classList.add('on');
+    await listener.start();
   }
 
   function suggestNow(): void {
@@ -647,6 +731,7 @@ export function startApp(root: HTMLElement): void {
       case 'timeline': openTimeline(); return true;
       case 'writing': void openWriting(); return true;
       case 'shortcuts': showShortcuts(); return true;
+      case 'speak': void toggleSpeech(); return true;
       case 'source': showSource(); return true;
       case 'save': void saveFile(); return true;
       case 'open': void openFile(); return true;
