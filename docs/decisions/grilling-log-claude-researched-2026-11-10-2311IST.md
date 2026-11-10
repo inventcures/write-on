@@ -169,3 +169,16 @@ No. It records choices (flips, ghosts, stashes), not typing. A replay needs ever
 ### Q27. How do persona rewrites square with "the human writes every sentence that ships"?
 
 The master spec's gray-zone rule says help at sentence level or above arrives as a question, never as drop-in text. tp53 explicitly asked for persona rephrasings of lines, openings and closes. **Answer: persona output comes in two forms.** A critique (questions and notes in that editor's voice, as marginalia), and rewrites that arrive only as extra variants under the writer's own text: labelled with the persona, never active until the writer flips to them, and marked as machine-written in the authorship ledger. The writer still chooses, edits and owns every line; the piece never changes on its own. This deliberately loosens the spec's rule, at the writer's request, and is recorded as ADR-0006. The blind voice test and ownership score from the spec are the tripwires if it starts to homogenise their voice.
+
+### Q28. How does the timeline show what changed, for writers who've never heard the word "diff"?
+
+tp53 asked for "clever diffing" designed from a perception and HCI point of view. Options: (a) a programmer's red/green line diff; (b) side-by-side before and after; (c) an editor's marked-up page.
+
+**Answer: (c), the way an editor marks a page, and no jargon in the UI** (the word "diff" never appears; the view is "What changed"). The reasons, each tied to how people read:
+
+- **Words, not characters or lines.** People read in words and phrases; a character-level change ("clo" → "kna") is noise. Changes are computed word by word over the sentence.
+- **Whole sentence in context.** A change only means something inside its sentence (the same reason Write_On flips variants in place). We show the full sentence as it reads afterwards, not a fragment.
+- **Familiar marks.** Added words get a soft highlighter wash; cut words stay where they were, faded and struck through with the app's hand-drawn pen line. Writers already know proofreading marks and tracked changes; the pen line ties it to the rest of Write_On. Colour is never the only signal (strike-through and fade also carry it), so it works for colour-blind readers.
+- **A plain caption first.** "Changed ‘close’ to ‘knack’", "Cut 14 words", "Added 2 sentences", "Tried another version of this sentence", "Ghosted a sentence", "Moved a paragraph to Overflow". The caption answers "what happened here?" before the eye parses any marks.
+- **Motion for change, focus for place.** Change blindness means people miss static differences between two pictures; during replay, added words fade in and cut words fade out so the eye catches each change. The rest of the piece dims (as with the alternatives panel) and the view scrolls to the passage, so there's never a hunt.
+- **Typing is grouped into moments.** A burst of typing is one moment, so the timeline reads as a sequence of decisions, not keystrokes.
