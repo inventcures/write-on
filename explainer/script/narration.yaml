@@ -29,6 +29,10 @@
     - scene: 1
       name: Title
       beats:
+        - id: "1.0"
+          kind: narration
+          visual: "A date card, 10 November 2026. A column of post cards scrolls fast: hardware, chemistry, agents. It slows; one question remains."
+          text: "Write-on began on November the tenth, the day Anthropic released Fable 5.2. Timelines filled with people pushing it to its limits. One question stuck instead: how do you write more, and more thoughtfully, without handing your thinking to the machine?"
         - id: "1.1"
           kind: narration
           visual: "Title card 'write-on' with a word-grain wave under 'on'. Subtitle: an orientation."
@@ -147,8 +151,8 @@
           text: "And when you love a line that doesn't fit, send it to Overflow."
         - id: "5.5"
           kind: key
-          visual: "The app's first screen: just text and a word count. Key cap Ctrl+Shift+R; tools slide in."
-          text: "Your first minute: Write-on opens in read mode, just your words and a word count. Press Ctrl+Shift+R to bring the tools in. The question mark brings this video back."
+          visual: "The app's first screen with a welcome card and a short tour; then key cap Ctrl+Shift+R hides and shows the tools; the ? button."
+          text: "Your first minute: a welcome card and a short tour walk you through each move once. Ctrl+Shift+R hides the tools when you want just your words. The question-mark button brings the card, and this video, back."
         - id: "5.6"
           kind: narration
           visual: "Hands typing normally; the tools stay quiet at the edges."
@@ -170,8 +174,8 @@
           text: "If you pick the shorter variant eight times out of ten, that's a pattern, and it belongs to you."
         - id: "6.3"
           kind: narration
-          visual: "Two columns. Solid: TODAY, the workbench, no AI, stays in your browser. Dashed: PLANNED, learns your style, quiet nudges as questions, editor personas."
-          text: "To be clear about what exists: today, Write-on is the workbench, these tools with no AI at all, and your writing stays in your browser and your own files. Next, we plan to learn from your choices and past writing, with quiet nudges that ask questions, and editor personas who critique."
+          visual: "Two columns. Solid: TODAY, the workbench, plus optional suggestions in blue (Ctrl+Shift+G) that never replace your words. Dashed: PLANNED, learns your style, quiet nudges as questions, editor personas."
+          text: "To be clear about what exists: today, Write-on is the workbench, plus one optional machine helper. Press Ctrl+Shift+G and three suggestions arrive in blue, as alternatives you can flip to. They never replace your words. Next, we plan to learn from your choices and past writing, with quiet nudges that ask questions, and editor personas who critique."
         - id: "6.4"
           kind: narration
           visual: "A pen stays in the writer's hand; the machine-blue mark only points."

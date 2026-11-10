@@ -1,38 +1,38 @@
 {
   "scene": 0,
   "title": "Hook",
-  "duration": 29.106,
+  "duration": 28.138,
   "beats": [
     {
       "id": "0.1",
       "kind": "narration",
-      "start": 0.517,
-      "speech": 9.458,
-      "end": 10.363,
+      "start": 0.5,
+      "speech": 9.144,
+      "end": 10.018,
       "display_text": "Here's a sentence. The meeting was really productive. You read it back, and something feels off. Maybe it's the word. Maybe it's the whole sentence."
     },
     {
       "id": "0.2",
       "kind": "narration",
-      "start": 10.363,
-      "speech": 4.649,
-      "end": 15.4,
+      "start": 10.018,
+      "speech": 4.494,
+      "end": 14.888,
       "display_text": "Most editors give you exactly two moves. Keep it, or delete it."
     },
     {
       "id": "0.3",
       "kind": "narration",
-      "start": 15.4,
-      "speech": 9.405,
-      "end": 25.193,
+      "start": 14.888,
+      "speech": 9.093,
+      "end": 24.356,
       "display_text": "Delete it, and your first try is gone for good. Keep it, and the better version may never get written. Either way, you have to decide before you've finished thinking."
     },
     {
       "id": "0.4",
       "kind": "narration",
-      "start": 25.193,
-      "speech": 2.663,
-      "end": 28.244,
+      "start": 24.356,
+      "speech": 2.574,
+      "end": 27.305,
       "display_text": "Write-on gives you a third move. Keep both."
     }
   ]

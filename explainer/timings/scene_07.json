@@ -1,14 +1,14 @@
 {
   "scene": 7,
   "title": "Close",
-  "duration": 12.061,
+  "duration": 11.66,
   "beats": [
     {
       "id": "7.1",
       "kind": "narration",
-      "start": 0.516,
-      "speech": 5.991,
-      "end": 6.895,
+      "start": 0.499,
+      "speech": 5.792,
+      "end": 6.666,
       "display_text": "So the next time you reach for delete, pause, and keep both. Write on."
     }
   ]

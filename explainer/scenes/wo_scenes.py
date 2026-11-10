@@ -84,7 +84,35 @@ class Scene01Title(TimedScene):
     scene_number = 1
 
     def construct(self):
+        # Origin: the day Fable 5.2 came out
+        self.at("1.0")
+        date = label("10 November 2026", size=40, color=INK, weight=BOLD).to_edge(UP, buff=0.6)
+        sub0 = label("Anthropic releases Fable 5.2", size=28, color=INK_SOFT).next_to(date, DOWN, buff=0.2)
+        self.play(FadeIn(date, shift=DOWN * 0.2), FadeIn(sub0), run_time=0.8)
+        topics = ["one-shot hardware", "multi-step chemistry", "agents that ship apps", "a game in an hour",
+                  "one-shot hardware, v2", "a lab notebook agent", "chemistry, step by step", "everything, at once"]
+        posts = VGroup()
+        for i, t in enumerate(topics * 2):
+            card = panel(5.2, 0.8, color=INK_FAINT)
+            dot = Dot(radius=0.14, fill_color=[WORD, SENT, PARA, MACHINE][i % 4]).move_to(card.get_left() + RIGHT * 0.4)
+            txt = label(t, size=24, color=INK_SOFT).next_to(dot, RIGHT, buff=0.3)
+            posts.add(VGroup(card, dot, txt))
+        posts.arrange(DOWN, buff=0.2).next_to(sub0, DOWN, buff=0.4).align_to(sub0, ORIGIN)
+        posts.set_x(0)
+        clip_top = sub0.get_bottom()[1] - 0.2
+        posts.add_updater(lambda m: [c.set_opacity(1 if c.get_y() < clip_top else 0) for c in m])
+        self.add(posts)
+        self.at("1.0", 0.15)
+        self.play(posts.animate.shift(UP * 9), run_time=5.5, rate_func=lambda t: smooth(t) ** 0.8)
+        posts.clear_updaters()
+        self.at("1.0", 0.6)
+        q = label("how do you write more, and more thoughtfully,\nwithout handing your thinking to the machine?",
+                  size=38, color=INK, alignment="CENTER")
+        self.play(FadeOut(posts), FadeOut(sub0), FadeOut(date), run_time=0.6)
+        self.play(Write(q), run_time=2.2)
+
         self.at("1.1")
+        self.play(FadeOut(q), run_time=0.5)
         title = page("write-on", size=96)
         w = wave(title["on"], amp=0.06, period=0.3, buff=0.14, width=4)
         sub = label("an orientation", size=34).next_to(title, DOWN, buff=0.7)
@@ -524,23 +552,34 @@ class Scene05MentalModel(TimedScene):
                       page("The trick is not to throw the first", size=28),
                       page("try away, but to keep it close.", size=28)).arrange(DOWN, buff=0.25, aligned_edge=LEFT)
         body.move_to(screen).shift(LEFT * 1.4 + UP * 0.3)
-        mode = label("read mode: just your words", size=28, color=INK).next_to(screen, UP, buff=0.25)
-        self.play(FadeIn(screen), FadeIn(wc), FadeIn(body), FadeIn(mode), run_time=0.8)
-        self.at("5.5", 0.42)
-        keys = keycap("Ctrl+Shift+R").next_to(screen, DOWN, buff=0.25)
-        self.play(FadeIn(keys, shift=UP * 0.2), run_time=0.4)
         rail = panel(2.4, 4.2, color=UND).move_to(screen.get_right() + LEFT * 1.45)
         rail_t = label("Overflow", size=26, color=UND).next_to(rail.get_top(), DOWN, buff=0.2)
         w1 = wave(body[1]["sketch"], color=WORD)
         body[1]["sketch"].set_fill(WORD)
-        tools = label("tools in", size=28, color=KEPT).next_to(screen, UP, buff=0.25)
-        self.play(Indicate(keys, color=KEPT, scale_factor=1.05), FadeIn(rail, shift=LEFT * 0.4), FadeIn(rail_t),
-                  ShowCreation(w1), FadeTransform(mode, tools), run_time=0.9)
+        mode = label("first visit: a welcome card, then a short tour", size=28, color=INK).next_to(screen, UP, buff=0.25)
+        self.play(FadeIn(screen), FadeIn(wc), FadeIn(body), FadeIn(rail), FadeIn(rail_t), ShowCreation(w1),
+                  FadeIn(mode), run_time=0.8)
+        welcome = panel(5.6, 3.0, color=INK_SOFT).move_to(screen)
+        wt = VGroup(page("Write_On", size=34, weight=BOLD), label("an editor for thinking on the page", size=24, color=INK_SOFT),
+                    button("start the tour", KEPT, size=22)).arrange(DOWN, buff=0.3).move_to(welcome)
+        self.play(FadeIn(VGroup(welcome, wt), scale=0.95), run_time=0.6)
+        self.at("5.5", 0.2)
+        steps = VGroup(*[label(t, size=22, color=c) for t, c in [("1  flip", WORD), ("2  add a variant", WORD),
+                         ("3  ghost", UND), ("4  stash", UND), ("5  timeline", KEPT)]]).arrange(RIGHT, buff=0.45)
+        steps.next_to(screen, DOWN, buff=0.3)
+        self.play(FadeOut(VGroup(welcome, wt)), LaggedStartMap(FadeIn, steps, lag_ratio=0.3), run_time=1.6)
+        self.at("5.5", 0.42)
+        keys = keycap("Ctrl+Shift+R").next_to(screen, DOWN, buff=0.25)
+        tools = label("tools out: just your words", size=28, color=INK).next_to(screen, UP, buff=0.25)
+        self.play(FadeOut(steps), FadeIn(keys, shift=UP * 0.2), run_time=0.4)
+        self.play(Indicate(keys, color=KEPT, scale_factor=1.05), FadeOut(rail), FadeOut(rail_t), FadeOut(w1),
+                  body[1]["sketch"].animate.set_fill(INK), FadeTransform(mode, tools), run_time=0.9)
+        self.play(FadeIn(rail), FadeIn(rail_t), FadeIn(w1), body[1]["sketch"].animate.set_fill(WORD), run_time=0.7)
         self.at("5.5", 0.8)
         q = VGroup(Circle(radius=0.24).set_stroke(INK, 2).set_fill(PANEL, 1), label("?", size=26, color=INK, weight=BOLD))
         q[1].move_to(q[0])
         q.move_to(screen.get_corner(DL) + RIGHT * 0.5 + UP * 0.45)
-        ql = label("this video, again", size=26, color=INK).next_to(q, RIGHT, buff=0.2)
+        ql = label("the card and this video, again", size=26, color=INK).next_to(q, RIGHT, buff=0.2)
         self.play(FadeIn(q, scale=0.6), FadeIn(ql), run_time=0.5)
         self.play(Indicate(q, color=WORD), run_time=0.6)
 
@@ -627,13 +666,15 @@ class Scene06AdaptsToYou(TimedScene):
             g.arrange(DOWN, buff=0.38, aligned_edge=LEFT).move_to(box).shift(DOWN * 0.35)
             return g
 
-        ti = items(["the workbench: alternatives,\nghost, Overflow, timeline", "no AI at all",
-                    "your writing stays in your\nbrowser and your files"], today, INK)
+        ti = items(["the workbench: alternatives,\nghost, Overflow, timeline", "optional: Ctrl+Shift+G gives\n3 suggestions, in blue",
+                    "they never replace\nyour words"], today, INK)
+        ti[1].set_fill(MACHINE)
         pi = items(["learns from your choices\nand your past writing", "quiet nudges that ask\nquestions",
                     "editor personas who critique"], planned, INK_SOFT)
         self.play(FadeIn(today), FadeIn(tt), run_time=0.6)
-        self.at("6.3", 0.08)
-        self.play(LaggedStartMap(FadeIn, ti, shift=RIGHT * 0.1, lag_ratio=0.5), run_time=2.2)
+        for item, frac in zip(ti, [0.06, 0.22, 0.38]):
+            self.at("6.3", frac)
+            self.play(FadeIn(item, shift=RIGHT * 0.1), run_time=0.6)
         self.at("6.3", 0.5)
         self.play(FadeIn(planned), FadeIn(pt), run_time=0.6)
         self.at("6.3", 0.6)
