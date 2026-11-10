@@ -120,6 +120,13 @@ export class Onboarding {
       link,
       ': you drive, Write_On navigates. It keeps you on track without getting in the way, helps when you ask, then steps back. A pairing writer, not a ghostwriter.',
     );
+    // tp53's three wants for a pairing partner, in their words.
+    const three = el('p', 'welcome-three');
+    three.append(
+      'What it aims to be: ',
+      el('strong', '', 'fast'), ', ', el('strong', '', 'performant'), ' and, most importantly, ', el('strong', '', 'productive'),
+      ': it assists when nudged, else stays out of your way.',
+    );
     const video = el('div', 'welcome-video');
     video.hidden = true;
     void fetch(EXPLAINER_URL, { method: 'HEAD' })
@@ -178,7 +185,7 @@ export class Onboarding {
       story,
     );
 
-    box.append(h, lede, pair, video, ideas, actions, fine, origin);
+    box.append(h, lede, pair, three, video, ideas, actions, fine, origin);
     backdrop.append(box);
     backdrop.addEventListener('mousedown', (e) => {
       if (e.target === backdrop) this.closeWelcome();

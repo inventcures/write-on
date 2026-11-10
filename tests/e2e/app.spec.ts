@@ -165,6 +165,7 @@ test('a first visit explains itself and the tour waits for each step', async ({ 
   await expect(welcome).toContainText('Ghost');
   await expect(welcome).toContainText('Overflow');
   await expect(welcome.getByRole('link', { name: 'pair programming' })).toHaveAttribute('href', /on-pair-programming/);
+  await expect(welcome).toContainText('fast, performant and, most importantly, productive: it assists when nudged, else stays out of your way.');
   await expect(welcome.getByRole('link', { name: 'The story' })).toHaveAttribute('href', 'https://inventcures.github.io/write-on/');
   const video = welcome.getByLabel('Explainer video');
   await expect(video).toHaveAttribute('poster', '/explainer.jpg');

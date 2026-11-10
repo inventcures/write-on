@@ -328,3 +328,6 @@ tp53: "add user controls - auth, login, history, event log (of ALL your writing)
 
 ### Q50. How does the $5 email work?
 - **Answer:** the server prices every Gemini reply from its own token counts, keeps a running total on the volume, and emails through Resend each time the total passes another $5. The address and the Resend key are Railway variables only. It's an estimate; a Google Cloud budget alert is the exact one.
+
+### Q51. tp53: the three things wanted in a pairing partner for writing: "fast, performant & most importantly productive (aka assists when nudged, else stays out of your way)".
+- **Answer:** one line on the welcome card, under the pairing paragraph, in their words. The card already says what the editor does; this says what it is for.
